@@ -10,11 +10,14 @@ class sc_environment:
 
   @staticmethod
   def _Initialize():
-    sc_environment._bInitialized = True
+    if not sc_environment._bInitialized:
+      sc_environment._bInitialized = True
     pass
 
   @staticmethod
   def GetHostName():
+    if not sc_environment._bInitialized:
+      sc_environment._Initialize()
     cRet = ""
     try:
       if sys.platform in ('unix','aix7'):
