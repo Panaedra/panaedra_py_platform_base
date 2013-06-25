@@ -6,7 +6,6 @@ class sc_environment:
   """Cross-platform environment and session information"""
 
   _bInitialized=False
-  o_CLOUD_ = None
 
   @staticmethod
   def _Initialize():
