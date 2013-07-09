@@ -18,7 +18,7 @@ class sc_exception:
     if not sc_exception._bInitialized:
       sc_exception._Initialize()
     exc_type, exc_value, exc_traceback = sys.exc_info()
-    cReturn = 'BOEBOE %s\n' % (type(oExceptionIP).__name__)
+    cReturn = 'NOTWORKINGYET... %s\n' % (type(oExceptionIP).__name__)
     try:
       lines = traceback.format_exception(exc_type, exc_value, exc_traceback)
       cException = type(oExceptionIP).__name__ + " " + str(oExceptionIP) + '\n'.join('!! ' + line.rstrip() for line in lines)  # Log it or whatever here
