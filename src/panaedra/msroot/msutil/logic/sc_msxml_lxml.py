@@ -8,13 +8,18 @@ class sc_msxml_lxml(object):
   
   @staticmethod
   def GetFormattedXml(oEtreeIP):
-    """Call etree.tostring, standardized to avoid binary differences in generated/committed xml files"""
+    """
+    Call etree.tostring, standardized to avoid binary differences in generated/committed xml files
+    """
     cRet = etree.tostring(oEtreeIP, pretty_print=True, encoding="utf-8", with_tail=True)
     return cRet
     
   @staticmethod
   def ChildnodesToDict(oEtreeIP, cXpathRootIP, cChildnodenameIP, cXpathChildKeyIP, tNsIP):
-    """Create a dictionary by iteration the children of a node, and creating a key by 'text' of the supplied xpath"""
+    """
+    Create a dictionary by iteration the children of a node, and creating a key by 'text' of the supplied xpath.
+    The python built-in Ellipsis object is used as a key to store the root node.
+    """
     tRet = {}
     
     oRoot = None
@@ -25,6 +30,7 @@ class sc_msxml_lxml(object):
     cChildnodenameIP = sc_msxml_lxml.FullNamespaceByTree(oEtreeIP,cChildnodenameIP)
     
     if not oRoot is None:
+      tRet[Ellipsis] = oRoot
       for oChild in oRoot.iterchildren(cChildnodenameIP):
         cKey = None
         for oXpath in oChild.xpath(cXpathChildKeyIP, namespaces=tNsIP):
