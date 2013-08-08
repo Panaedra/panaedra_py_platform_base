@@ -7,11 +7,15 @@ from lxml import etree
 class sc_msxml_lxml(object):
   
   @staticmethod
-  def GetFormattedXml(oEtreeIP):
+  def GetFormattedXml(oEtreeIP, oRawTransformCallback=None):
     """
     Call etree.tostring, standardized to avoid binary differences in generated/committed xml files
     """
     cRet = etree.tostring(oEtreeIP, pretty_print=True, encoding="utf-8", with_tail=True)
+    
+    if not oRawTransformCallback is None:
+      cRet = oRawTransformCallback(cRet)
+    
     return cRet
     
   @staticmethod
