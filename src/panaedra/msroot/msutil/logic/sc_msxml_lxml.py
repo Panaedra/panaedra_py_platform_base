@@ -3,8 +3,11 @@ Custom helper methods for the lxml python package
 """
 
 from lxml import etree
+from panaedra.mxroot.mxeclipse.logic.sc_hook_mxeclipse_debug import sc_hook_mxeclipse_debug
 
 class sc_msxml_lxml(object):
+  
+  oDefaultParser = None
   
   @staticmethod
   def GetFormattedXml(oEtreeIP, oRawTransformCallback=None):
@@ -17,7 +20,14 @@ class sc_msxml_lxml(object):
       cRet = oRawTransformCallback(cRet)
     
     return cRet
-    
+
+  @classmethod
+  def XmlFromString(cls,cXmlIP):
+    if cls.oDefaultParser is None:
+      cls.oDefaultParser = etree.XMLParser(remove_blank_text=True, strip_cdata=False)
+    oEtree = etree.fromstring(cXmlIP, cls.oDefaultParser)
+    return oEtree
+
   @staticmethod
   def ChildnodesToDict(oEtreeIP, cXpathRootIP, cChildnodenameIP, cXpathChildKeyIP, tNsIP):
     """
@@ -31,6 +41,24 @@ class sc_msxml_lxml(object):
       oRoot = oXpath 
       break
     
+    if oRoot is None:
+      oRootParPar = None 
+      if cXpathRootIP.endswith('/n:children/n:topics'):
+        cXpathRootTrimmed = cXpathRootIP[0:cXpathRootIP.rindex('/n:children/n:topics')]
+        for oXpath in oEtreeIP.xpath(cXpathRootTrimmed, namespaces=tNsIP):
+          oRootParPar = oXpath 
+          break
+      if not oRootParPar is None:
+        # Insert an empty children/topics tree
+        oRootParPar.append(sc_msxml_lxml.XmlFromString(r'<children xmlns="urn:_3DP_:xmap:xmlns:content:2.0"><topics type="attached"/></children>'))
+      # retry original xpath search
+      for oXpath in oEtreeIP.xpath(cXpathRootIP, namespaces=tNsIP):
+        oRoot = oXpath 
+        break
+      
+    if oRoot is None:
+      sc_hook_mxeclipse_debug.MsgPopup('Error: Cannot find root with "%s"' % cXpathRootIP)
+            
     cChildnodenameIP = sc_msxml_lxml.FullNamespaceByTree(oEtreeIP,cChildnodenameIP)
     
     if not oRoot is None:
