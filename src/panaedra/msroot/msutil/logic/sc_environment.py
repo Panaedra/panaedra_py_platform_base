@@ -6,17 +6,17 @@ class sc_environment:
   """Cross-platform environment and session information"""
 
   _bInitialized=False
+  cEnv = "pub"
 
-  @staticmethod
-  def _Initialize():
-    if not sc_environment._bInitialized:
-      sc_environment._bInitialized = True
-    pass
+  @classmethod
+  def _Initialize(cls):
+    if not cls._bInitialized:
+      cls._bInitialized = True
 
-  @staticmethod
-  def GetHostName():
-    if not sc_environment._bInitialized:
-      sc_environment._Initialize()
+  @classmethod
+  def GetHostName(cls):
+    if not cls._bInitialized:
+      cls._Initialize()
     cRet = ""
     try:
       if sys.platform in ('unix','aix7'):
@@ -31,5 +31,17 @@ class sc_environment:
     except subprocess.CalledProcessError, e:
       cRet = "GetHostName() error: %s" % e
     return cRet
+  
+  # for use from the pythonbridge
+  @classmethod
+  def GetEnvironment(cls,cDataIP):
+    return cls.cEnv
+
+  @classmethod
+  def SetEnvironment(cls,cDataIP):
+    cls.cEnv = cDataIP
+    print "Setting environment to: %s" % cDataIP
+    return ''
+
 
 #EOF
