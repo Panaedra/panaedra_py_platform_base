@@ -1,3 +1,4 @@
+import ast
 import sys
 import os
 import subprocess
@@ -6,7 +7,24 @@ class sc_environment:
   """Cross-platform environment and session information"""
 
   _bInitialized=False
-  cEnv = "pub"
+  cEnv='(not-set)'
+  bLiveEnv=False
+  cUserID=''
+  cUiMode=''            
+  cAsMode=''        
+  cLayer=''
+  cLang=''
+  cUserID=''
+  cOsUserID=''
+  cLogDir=''         
+  cSharedIniDir=''      
+  cSessionGuid=''
+  cSessionGuidShort=''
+  cSessionGuidRemote=''
+  cOtaPath=''          
+  cWorkPath=''
+  cDevToken=''
+  cDevIP=''   
 
   @classmethod
   def _Initialize(cls):
@@ -32,16 +50,28 @@ class sc_environment:
       cRet = "GetHostName() error: %s" % e
     return cRet
   
-  # for use from the pythonbridge
   @classmethod
-  def GetEnvironment(cls,cDataIP):
-    return cls.cEnv
-
-  @classmethod
-  def SetEnvironment(cls,cDataIP):
-    cls.cEnv = cDataIP
-    print "Setting environment to: %s" % cDataIP
-    return ''
-
+  def _InheritAblEnvironmentSettings(cls,cDataIP):
+    """Called from Bridge"""
+    tData = ast.literal_eval(cDataIP)
+    cls.cEnv               = tData['cEnv'              ]
+    cls.bLiveEnv           = tData['bLiveEnv'          ]
+    cls.cUserID            = tData['cUserID'           ]
+    cls.cUiMode            = tData['cUiMode'           ]
+    cls.cAsMode            = tData['cAsMode'           ]
+    cls.cLayer             = tData['cLayer'            ]
+    cls.cLang              = tData['cLang'             ]
+    cls.cUserID            = tData['cUserID'           ]
+    cls.cOsUserID          = tData['cOsUserID'         ]
+    cls.cLogDir            = tData['cLogDir'           ]
+    cls.cSharedIniDir      = tData['cSharedIniDir'     ]
+    cls.cSessionGuid       = tData['cSessionGuid'      ]
+    cls.cSessionGuidShort  = tData['cSessionGuidShort' ]
+    cls.cSessionGuidRemote = tData['cSessionGuidRemote']
+    cls.cOtaPath           = tData['cOtaPath'          ]
+    cls.cWorkPath          = tData['cWorkPath'         ]
+    cls.cDevToken          = tData['cDevToken'         ]
+    cls.cDevIP             = tData['cDevIP'            ]
+    return 'Setting environment to: %s, workpath to: %s, devtoken to: %s' % (repr(cls.cEnv),repr(cls.cWorkPath),repr(cls.cDevToken))
 
 #EOF
