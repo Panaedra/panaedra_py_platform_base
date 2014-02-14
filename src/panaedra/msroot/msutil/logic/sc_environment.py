@@ -23,7 +23,6 @@ class sc_environment:
   cSessionGuidRemote=''
   cOtaPath=''          
   cWorkPath=''
-  cDevToken=''
   cDevIP=''   
   cDevToken=''
 
@@ -71,7 +70,6 @@ class sc_environment:
     cls.cSessionGuidRemote = tData['cSessionGuidRemote']
     cls.cOtaPath           = tData['cOtaPath'          ]
     cls.cWorkPath          = tData['cWorkPath'         ]
-    cls.cDevToken          = tData['cDevToken'         ]
     cls.cDevIP             = tData['cDevIP'            ]
     cls.cDevToken          = tData['cDevToken'         ]
     return 'Setting environment to: %s, workpath to: %s, devtoken to: %s' % (repr(cls.cEnv),repr(cls.cWorkPath),repr(cls.cDevToken))
