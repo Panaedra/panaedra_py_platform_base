@@ -25,6 +25,7 @@ class sc_environment:
   cWorkPath=''
   cDevToken=''
   cDevIP=''   
+  cDevToken=''
 
   @classmethod
   def _Initialize(cls):
@@ -72,6 +73,7 @@ class sc_environment:
     cls.cWorkPath          = tData['cWorkPath'         ]
     cls.cDevToken          = tData['cDevToken'         ]
     cls.cDevIP             = tData['cDevIP'            ]
+    cls.cDevToken          = tData['cDevToken'         ]
     return 'Setting environment to: %s, workpath to: %s, devtoken to: %s' % (repr(cls.cEnv),repr(cls.cWorkPath),repr(cls.cDevToken))
 
 #EOF
