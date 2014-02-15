@@ -10,6 +10,7 @@ class sc_environment:
   cEnv='(not-set)'
   bLiveEnv=False
   cUserID=''
+  cUserPasswordHash=''
   cUiMode=''            
   cAsMode=''        
   cLayer=''
