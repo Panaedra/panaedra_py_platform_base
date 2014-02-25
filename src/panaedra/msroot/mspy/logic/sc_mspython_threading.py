@@ -1,4 +1,5 @@
 import threading
+import json
 
 from copy import deepcopy
 
@@ -27,10 +28,7 @@ class sc_mspython_threading:
     """Called from Bridge"""
     with cls.oLock:
       tThreadInfoCpy = deepcopy(cls.tThreadInfo)
-    tRet = []
-    for (a,b) in tThreadInfoCpy.iteritems():
-      tRet += ('[%s] %s' % (a,b),)
-    return '\n'.join(tRet)
+    return json.dumps(tThreadInfoCpy,indent=0)
   
   @classmethod
   def ClearThreadInfo(cls,cDataIP):
