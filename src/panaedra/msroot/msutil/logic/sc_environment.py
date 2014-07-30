@@ -19,6 +19,8 @@ class sc_environment:
   cOsUserID=''
   cLogDir=''         
   cSharedIniDir=''      
+  cSessionPid=''
+  cSessionHostname=''
   cSessionGuid=''
   cSessionGuidShort=''
   cSessionGuidRemote=''
@@ -66,6 +68,8 @@ class sc_environment:
     cls.cOsUserID          = tData['cOsUserID'         ]
     cls.cLogDir            = tData['cLogDir'           ]
     cls.cSharedIniDir      = tData['cSharedIniDir'     ]
+    cls.cSessionPid        = tData['cSessionPid'       ]
+    cls.cSessionHostname   = tData['cSessionHostname'  ]
     cls.cSessionGuid       = tData['cSessionGuid'      ]
     cls.cSessionGuidShort  = tData['cSessionGuidShort' ]
     cls.cSessionGuidRemote = tData['cSessionGuidRemote']
