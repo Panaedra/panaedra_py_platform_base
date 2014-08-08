@@ -68,7 +68,6 @@ class sc_environment:
     cls.cUserID            = tData['cUserID'           ]
     cls.cOsUserID          = tData['cOsUserID'         ]
     cls.cLogDir            = tData['cLogDir'           ]
-    cls.cLogverboseDir     = tData['cLogverboseDir'    ]
     cls.cSharedIniDir      = tData['cSharedIniDir'     ]
     cls.cSessionPid        = tData['cSessionPid'       ]
     cls.cSessionHostname   = tData['cSessionHostname'  ]
@@ -79,7 +78,11 @@ class sc_environment:
     cls.cWorkPath          = tData['cWorkPath'         ]
     cls.cDevIP             = tData['cDevIP'            ]
     cls.cDevToken          = tData['cDevToken'         ]
-    sc_path._InheritAblEnvironmentSettings(tData)
+    try:
+      cls.cLogverboseDir     = tData['cLogverboseDir'    ]
+      sc_path._InheritAblEnvironmentSettings(tData)
+    except:
+      pass # ShouldHave: remove the try+except after sc_environment ABL changes are live
     return 'Setting environment to: %s, workpath to: %s, devtoken to: %s' % (repr(cls.cEnv),repr(cls.cWorkPath),repr(cls.cDevToken))
 
 #EOF
