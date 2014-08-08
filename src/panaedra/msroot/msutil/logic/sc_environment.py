@@ -2,6 +2,7 @@ import ast
 import sys
 import os
 import subprocess
+from panaedra.msroot.msutil.logic.sc_path import sc_path
 
 class sc_environment:
   """Cross-platform environment and session information"""
@@ -67,6 +68,7 @@ class sc_environment:
     cls.cUserID            = tData['cUserID'           ]
     cls.cOsUserID          = tData['cOsUserID'         ]
     cls.cLogDir            = tData['cLogDir'           ]
+    cls.cLogverboseDir     = tData['cLogverboseDir'    ]
     cls.cSharedIniDir      = tData['cSharedIniDir'     ]
     cls.cSessionPid        = tData['cSessionPid'       ]
     cls.cSessionHostname   = tData['cSessionHostname'  ]
@@ -77,6 +79,7 @@ class sc_environment:
     cls.cWorkPath          = tData['cWorkPath'         ]
     cls.cDevIP             = tData['cDevIP'            ]
     cls.cDevToken          = tData['cDevToken'         ]
+    sc_path._InheritAblEnvironmentSettings(tData)
     return 'Setting environment to: %s, workpath to: %s, devtoken to: %s' % (repr(cls.cEnv),repr(cls.cWorkPath),repr(cls.cDevToken))
 
 #EOF
