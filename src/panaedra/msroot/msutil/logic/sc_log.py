@@ -61,7 +61,7 @@ class c_mslog(object):
     ''' write message to snapshot log '''
     with open(self.cSnapshotLogFileName(),'wb') as f:
       if self.bIncludeTimeStamp:
-        f.write('{0:<20}'.format(sc_date_timestamp.cTimeOnly_Short_WithPeriods()))
+        f.write('{0:<20}'.format(sc_date_timestamp.cTimeOnly_Long_WithPeriods()))
       f.write('{0}\n'.format(cMessageIP))
 
 #EOF
