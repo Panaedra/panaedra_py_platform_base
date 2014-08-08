@@ -8,18 +8,17 @@ class sc_log(object):
   '''Factory class
   '''
   @classmethod
-  def GetLogger(cls, cSourcenameIP, cLognameIP, cSublogdirIP=None):
-    oRet = c_mslog(cSourcenameIP, cLognameIP, cSublogdirIP)
+  def GetLogger(cls, cLognameIP, cSublogdirIP=None):
+    oRet = c_mslog(cLognameIP, cSublogdirIP)
     return oRet
 
 class c_mslog(object):
   '''A log object that logs to file. From a bridge (especially from a fifo thread), use snapshot logfiles only.
   '''
   
-  def __init__(self, cSourcenameIP, cLognameIP, cSublogdirIP=None):
+  def __init__(self, cLognameIP, cSublogdirIP=None):
     '''Constructor
     '''
-    self.cSourcename = cSourcenameIP
     self.cLogname = cLognameIP
     self.cSublogdir = cSublogdirIP
     self._cSnapshotLogFileNamePrev = None 
@@ -28,7 +27,6 @@ class c_mslog(object):
     
     if False:
       '''BoB: Pydev type hinting, epydoc, sphinx or assert implementations not working. 2014Q3'''
-      self.cSourcename               = '' 
       self.cLogname                  = ''
       self.cSublogdir                = ''
       self._cSnapshotLogFileNamePrev = '' 
@@ -37,10 +35,10 @@ class c_mslog(object):
       
   def cSnapshotLogFileName(self):
     
-    cRet = '{0[dir]}/{0[subdir]}{0[src]}_{0[env]}_{0[stamp]}_{0[sfx]}snapshot.log'.format(
+    cRet = '{0[dir]}/{0[subdir]}{0[logname]}_{0[env]}_{0[stamp]}_{0[sfx]}snapshot.log'.format(
       {'dir'         : sc_path.cLogverboseDir,
        'subdir'      : '' if (self.cSublogdir is None or len(self.cSublogdir) == 0) else self.cSublogdir + '/',
-       'src'         : self.cSourcename,
+       'logname'     : self.cLogname,
        'env'         : sc_environment.cEnv.lower(),
        'stamp'       : sc_date_timestamp.cTimeStamp_Short_Date(),
        'sfx'         : '' if (self._cSnapshotSuffix is None or len(self._cSnapshotSuffix) == 0) else self._cSnapshotSuffix.lower() + '_',
