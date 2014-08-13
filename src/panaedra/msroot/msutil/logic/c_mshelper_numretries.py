@@ -3,18 +3,22 @@ from panaedra.msroot.msutil.logic.sc_mspysys import sc_mspysys
 from copy import deepcopy
 from panaedra.msroot.msutil.logic.sc_date_timestamp import sc_date_timestamp
 import json
+from panaedra.msroot.msutil.logic.c_msdecorator_base import decoratorbase
 
 class c_mshelper_numretries(object):
-  '''Helper object. Retry a certain action a fixed number of times. 
-     Retry time can be increased for each retry iteration.
+  '''
+  Helper object. Retry a certain action a fixed number of times. 
+  Retry time can be increased for each retry iteration.
+  
+  You can use this class standalone, or as a decorator (see below).   
    
-   Example:
-     from panaedra.msroot.msutil.logic.c_mshelper_numretries import num_retries
-     @num_retries(max_tries=3, exc_types=[TypeError,ZeroDivisionError])
-     def i_will_fail():
-       cTypeError = '%s' % (1,2,3) 
-       iOtherError = 1 / 0 
-       print "This won't be reached: %s %s" % (cTypeError, iOtherError)
+  Example:
+    from panaedra.msroot.msutil.logic.c_mshelper_numretries import num_retries
+    @num_retries(max_tries=3, exc_types=[TypeError,ZeroDivisionError])
+    def i_will_fail():
+      cTypeError = '%s' % (1,2,3) 
+      iOtherError = 1 / 0 
+      print "This won't be reached: %s %s" % (cTypeError, iOtherError)
      
   '''
   
@@ -111,9 +115,7 @@ class c_mshelper_numretries(object):
       if not aRetry is None:
         aRetry(*self.tRetryArgs, **self.tRetryKwArgs)
 
-_DEBUG_DECORATOR=False
-
-class num_retries(object):
+class num_retries(decoratorbase):
   '''
   Decorator. Works for functions as well as methods.
   
@@ -122,39 +124,6 @@ class num_retries(object):
   You can use any parameters of the c_mshelper_numretries constructor, like this: 
     @num_retries(max_tries=4,retry_seconds=[1.0,2.0],exc_types=[TimeoutError])
   '''
-  
-  def __init__(self, *iargs, **ikwargs):
-    '''If there are decorator arguments, the function
-       to be decorated is *not* passed to the constructor.'''
-    self._iargs = iargs
-    self._ikwargs = ikwargs
-    self._cargs = None
-    self._fargs = None
-    if len(iargs) > 0:
-      '''If parameters are omitted, no object pointer is passed in case of object methods. 
-         To avoid confusion, we make parenthesis mandatory, even for non-OO.'''
-      raise ImportError('This decorator requires parameters, like this: @num_retries()')
-    if _DEBUG_DECORATOR:
-      sys.stderr.write('INIT phase: %s %s\n' % (repr(self._iargs),repr(self._ikwargs)))
-
-  def __call__(self, *cargs):
-    '''If there are decorator arguments, __call__() is only
-       called once, as part of the decoration process.'''
-    self._cargs = cargs
-    if _DEBUG_DECORATOR:
-      sys.stderr.write('SETUP phase %s %s %s %s\n' % (repr(self._iargs),repr(self._ikwargs),repr(self._cargs),repr(self._fargs)))
-    def wrapped_f(*fargs):
-      self._fargs =  fargs
-      if _DEBUG_DECORATOR:
-        sys.stderr.write('WRAP phase: %s %s %s %s\n' % (repr(self._iargs),repr(self._ikwargs),repr(self._cargs),repr(self._fargs)))
-      if len(self._cargs) >= 1:
-        if _DEBUG_DECORATOR:
-          sys.stderr.write('RUN phase: start.\n')
-        self.runphase()  
-        if _DEBUG_DECORATOR:
-          sys.stderr.write('RUN phase: done.\n')
-    return wrapped_f
-
   def runphase(self, *cargs):
     oNumRetries = c_mshelper_numretries(*self._cargs, **self._ikwargs)
     if len(self._fargs) > 0:
