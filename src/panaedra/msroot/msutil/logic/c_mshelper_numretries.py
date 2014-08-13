@@ -23,16 +23,21 @@ class c_mshelper_numretries(object):
     _args=args
     def wrap(*__args):
       if len(__args) == 0: __args=_args
+      elif len(_args) > 0 and not hasattr(__args[0], '__call__'): 
+        __args=_args
+        kwargs['callobject'] = __args[0]
       return c_mshelper_numretries(*__args,**kwargs).execute()
     return wrap
   
-  def __init__(self, 
-    func=None, func_args=(), func_kwargs={}, 
+  def __init__(self,  
+    func=None, callobject=None, func_args=(), func_kwargs={}, 
     max_tries=5, retry_seconds=[0.3, 1.0, 5.0], 
     exc_types=[ZeroDivisionError], stderr_feedback=True,
     retry_func=[None], retry_args=(), retry_kwargs={}):
     ''' Constructor
     
+    :param    callobject:      If OO, the OO object to be used for 'self' or 'cls', else None
+    :type     callobject:      object 
     :param    func:            The function to be called
     :type     func:            function 
     :param    func_args:       list of arguments for the function to be called
@@ -57,6 +62,7 @@ class c_mshelper_numretries(object):
     :rtype:   c_mshelper_numretries
     :returns: a reusable object for retry loops
     '''
+    self.oCallSelf=callobject
     self.aFunc=func
     self.tFuncArgs=func_args
     self.tFuncKwArgs=func_kwargs
@@ -68,6 +74,7 @@ class c_mshelper_numretries(object):
     self.tRetryKwArgs=retry_kwargs
     self.bStderrFeedback=stderr_feedback
     self.tFeedback=[]
+    self._tArgsMod=None
     
     # To avoid lingering circular references at exceptions within exceptions,
     # local variables should not be used. We use data members here for all 
@@ -81,7 +88,13 @@ class c_mshelper_numretries(object):
     while iRetry < self.iMaxTries:
       iRetry += 1
       try:
-        self.aFunc(*self.tFuncArgs,**self.tFuncKwArgs)
+        if self.oCallSelf is None:
+          self.aFunc(*self.tFuncArgs,**self.tFuncKwArgs)
+        else:
+          if self._tArgsMod is None:
+            self._tArgsMod=list(self.tFuncArgs) 
+            self._tArgsMod.insert(0, self.oCallSelf)  
+          self.aFunc(*self._tArgsMod,**self.tFuncKwArgs)
         break
       except:
         self._nolingr_oExcType, self._nolingr_oExcObj, self._nolingr_oExcTb = sys.exc_info()
