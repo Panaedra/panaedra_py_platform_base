@@ -1,29 +1,42 @@
-import sys, os
+import os, sys
 from panaedra.msroot.msutil.logic.sc_mspysys import sc_mspysys
 
 class c_mshelper_numretries(object):
   '''Helper object. Retry a certain action a fixed number of times. 
      Retry time can be increased for each retry iteration.
+   
+   Example:
+     from panaedra.msroot.msutil.logic.c_mshelper_numretries import num_retries
+     @num_retries(max_tries=3, exc_types=[TypeError,ZeroDivisionError])
+     def i_will_fail():
+       cTypeError = '%s' % (1,2,3) 
+       iOtherError = 1 / 0 
+       print "This won't be reached: %s %s" % (cTypeError, iOtherError)
+     
   '''
   
   @staticmethod
-  def _decorator(func):
-    return c_mshelper_numretries(func=func).execute()
+  def _decorator(*args,**kwargs):
+    def wrap(func):
+      kwargs['func']=func
+      return c_mshelper_numretries(**kwargs).execute()
+    return wrap
   
   def __init__(self, 
     func=None, func_args=(), func_kwargs={}, 
-    max_retries=10,  retry_seconds=[0.3, 1.0, 5.0], 
+    max_tries=5, retry_seconds=[0.3, 1.0, 2.5, 5.0], 
     exc_types=[TypeError,ValueError], 
     retry_func=[None], retry_args=(), retry_kwargs={}):
-    ''' Constructor.
+    ''' Constructor
+    
     :param    func:           The function to be called
     :type     func:           function 
     :param    func_args:      list of arguments for the function to be called
     :type     func_args:      list 
     :param    func_kwargs:    dict of keyword arguments for the function to be called
     :type     func_kwargs:    dict 
-    :param    max_retries:    An exception is raised after max_retries is reached.
-    :type     max_retries:    int 
+    :param    max_tries:      An exception is raised after max_tries is reached. max_tries=1 does not retry. max_tries=0 does nothing at all.
+    :type     max_tries:      int 
     :param    retry_seconds:  Can be 1 float, or a list of floats. I.E.: [0.5, 1.0, 5.0] will wait 0.5 seconds after the first fail, 1.0 seconds after the second fail, 5.0 seconds after fail three to N. 
     :type     retry_seconds:  list 
     :param    exc_types:      If any thrown exception is not in this list, no retries will be done and the exception will be raised as normal. If the list is [Exception], any exception will be retried. 
@@ -41,7 +54,7 @@ class c_mshelper_numretries(object):
     self.aFunc=func
     self.tFuncArgs=func_args
     self.tFuncKwArgs=func_kwargs
-    self.iMaxRetries=max_retries
+    self.iMaxTries=max_tries
     self.tRetrySeconds=retry_seconds
     self.tExcTypes=exc_types
     self.tRetryFunc=retry_func
@@ -57,7 +70,7 @@ class c_mshelper_numretries(object):
   
   def execute(self):
     iRetry = 0
-    while iRetry < self.iMaxRetries:
+    while iRetry < self.iMaxTries:
       iRetry += 1
       try:
         self.aFunc(*self.tFuncArgs,**self.tFuncKwArgs)
@@ -72,7 +85,7 @@ class c_mshelper_numretries(object):
         print iRetry, repr(self._nolingr_oExcType), fname, self._nolingr_oExcTb.tb_lineno
         # Avoid lingering circular references
         del(self._nolingr_oExcType, self._nolingr_oExcObj, self._nolingr_oExcTb)
-        if iRetry == self.iMaxRetries: 
+        if iRetry == self.iMaxTries: 
           raise
       fPause = self.tRetrySeconds if not hasattr(self.tRetrySeconds, '__iter__') else self.tRetrySeconds[min(len(self.tRetrySeconds), iRetry) - 1]  
       sc_mspysys.Sleep(fPause)
@@ -84,4 +97,3 @@ class c_mshelper_numretries(object):
 num_retries=c_mshelper_numretries._decorator
 
 #EOF
-
