@@ -68,6 +68,6 @@ class decoratorbase(object):
     oFallback = _runfallback(*self._cargs, **self._ikwargs)
     if len(self._fargs) > 0:
       oFallback.oCallSelf = self._fargs[0] 
-    oFallback.execute()
+    oFallback.execute(oFallback.oCallSelf)
 
 #EOF

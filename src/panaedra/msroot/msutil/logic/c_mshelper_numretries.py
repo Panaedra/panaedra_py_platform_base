@@ -1,8 +1,9 @@
 import os, sys
-from panaedra.msroot.msutil.logic.sc_mspysys import sc_mspysys
-from copy import deepcopy
-from panaedra.msroot.msutil.logic.sc_date_timestamp import sc_date_timestamp
 import json
+from copy import deepcopy
+
+from panaedra.msroot.msutil.logic.sc_mspysys import sc_mspysys
+from panaedra.msroot.msutil.logic.sc_date_timestamp import sc_date_timestamp
 from panaedra.msroot.msutil.logic.c_msdecorator_base import decoratorbase
 
 class c_mshelper_numretries(object):
@@ -45,9 +46,9 @@ class c_mshelper_numretries(object):
     :type     retry_seconds:   list 
     :param    exc_types:       If any thrown exception is not in this list, no retries will be done and the exception will be raised as normal. If the list is [Exception], any exception will be retried. 
     :type     exc_types:       list 
-    :param    retry_func:      Can be 1 function pointer, or a list of function pointers. Entries with None are handled as no-ops. Called if except, post-pause. len(list) should be one less than max_retries, rest is ignored. I.E.: [onfirst, onrest] will execute onfirst on the first iteration, and onrest on all other iterations 
+    :param    retry_func:      Can be 1 function pointer, or a list of function pointers. Use retry_args=['self'] Entries with None are handled as no-ops. Called if except, post-pause. len(list) should be one less than max_retries, rest is ignored. I.E.: [onfirst, onrest] will execute onfirst on the first iteration, and onrest on all other iterations 
     :type     retry_func:      list 
-    :param    retry_args:      list of arguments for all (!) retry functions
+    :param    retry_args:      list of arguments for all (!) retry functions. Use retry_args=['self'] for object methods, it will be substituted with the self handle.
     :type     retry_args:      list 
     :param    retry_kwargs:    dict of keyword arguments for all (!) retry functions
     :type     retry_kwargs:    dict 
@@ -76,7 +77,7 @@ class c_mshelper_numretries(object):
     self._nolingr_oExcObj=None
     self._nolingr_oExcTb=None
   
-  def execute(self):
+  def execute(self, oCallSelf=None):
     iRetry = 0
     while iRetry < self.iMaxTries:
       iRetry += 1
@@ -109,10 +110,15 @@ class c_mshelper_numretries(object):
             sys.stderr.write('\n')
             sys.stderr.flush()
           raise
-      fPause = self.tRetrySeconds if not hasattr(self.tRetrySeconds, '__iter__') else self.tRetrySeconds[min(len(self.tRetrySeconds), iRetry) - 1]  
-      sc_mspysys.Sleep(fPause)
+      fPause = self.tRetrySeconds if not hasattr(self.tRetrySeconds, '__iter__') else self.tRetrySeconds[min(len(self.tRetrySeconds), iRetry) - 1]
+      if fPause > 0.0:  
+        sc_mspysys.Sleep(fPause)
       aRetry = self.tRetryFunc if not hasattr(self.tRetryFunc, '__iter__') else self.tRetryFunc[min(len(self.tRetryFunc), iRetry) - 1]
       if not aRetry is None:
+        if self.tRetryArgs is None: self.tRetryArgs = []
+        elif 'self' in self.tRetryArgs:
+          self.tRetryArgs[self.tRetryArgs.index('self')] = oCallSelf 
+        if self.tRetryKwArgs is None: self.tRetryKwArgs = {}
         aRetry(*self.tRetryArgs, **self.tRetryKwArgs)
 
 class num_retries(decoratorbase):
@@ -128,6 +134,6 @@ class num_retries(decoratorbase):
     oNumRetries = c_mshelper_numretries(*self._cargs, **self._ikwargs)
     if len(self._fargs) > 0:
       oNumRetries.oCallSelf = self._fargs[0] 
-    oNumRetries.execute()
+    oNumRetries.execute(oNumRetries.oCallSelf)
 
 #EOF
