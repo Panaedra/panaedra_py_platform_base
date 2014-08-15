@@ -14,8 +14,10 @@ class _runfallback(object):
   '''
   def __init__(self, firstparam=None, callobject=None):
     self.aFunc=firstparam
-    self.oCallSelf=callobject
-  def execute(self):
+    self.oCallObject=callobject
+    self.oCallSelf=None
+  def execute(self, oCallSelf=None):
+    self.oCallSelf=oCallSelf
     if self.oCallSelf is None:  
       self.aFunc()
     else:
