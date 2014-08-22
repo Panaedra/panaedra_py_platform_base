@@ -78,17 +78,17 @@ class c_mshelper_numretries(object):
     self._nolingr_oExcTb=None
   
   def execute(self, oCallSelf=None):
-    iRetry = 0
+    iRetry=0
     while iRetry < self.iMaxTries:
       iRetry += 1
       try:
         if self.oCallSelf is None:
-          self.aFunc(*self.tFuncArgs,**self.tFuncKwArgs)
+          return self.aFunc(*self.tFuncArgs,**self.tFuncKwArgs)
         else:
           if self._tArgsMod is None:
             self._tArgsMod=list(self.tFuncArgs) 
             self._tArgsMod.insert(0, self.oCallSelf)  
-          self.aFunc(*self._tArgsMod,**self.tFuncKwArgs)
+          return self.aFunc(*self._tArgsMod,**self.tFuncKwArgs)
         break
       except:
         self._nolingr_oExcType, self._nolingr_oExcObj, self._nolingr_oExcTb = sys.exc_info()
@@ -134,6 +134,9 @@ class num_retries(decoratorbase):
     oNumRetries = c_mshelper_numretries(*self._cargs, **self._ikwargs)
     if len(self._fargs) > 0:
       oNumRetries.oCallSelf = self._fargs[0] 
-    oNumRetries.execute(oNumRetries.oCallSelf)
+      oNumRetries.tFuncArgs = self._fargs[1:] if len(self._fargs) > 1 else []  
+    if len(self._fkwargs) > 0:
+      oNumRetries.tFuncKwArgs = self._fkwargs  
+    return oNumRetries.execute(oNumRetries.oCallSelf)
 
 #EOF
