@@ -29,12 +29,20 @@ class sc_environment:
   cWorkPath=''
   cDevIP=''   
   cDevToken=''
+  oLog=None
 
   @classmethod
   def _Initialize(cls):
     if not cls._bInitialized:
       cls._bInitialized = True
 
+  @classmethod
+  def SessionLog(cls):
+    if cls.oLog is None:
+      from panaedra.msroot.msutil.logic.sc_log import sc_log
+      cls.oLog = sc_log.GetLogger('session%s' % sc_environment.cSessionPid, '')
+    return cls.oLog
+    
   @classmethod
   def GetHostName(cls):
     if not cls._bInitialized:
