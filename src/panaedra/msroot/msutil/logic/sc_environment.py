@@ -3,6 +3,7 @@ import sys
 import os
 import subprocess
 from panaedra.msroot.msutil.logic.sc_path import sc_path
+import traceback
 
 class sc_environment:
   """Cross-platform environment and session information"""
@@ -65,32 +66,35 @@ class sc_environment:
   @classmethod
   def _InheritAblEnvironmentSettings(cls,cDataIP):
     """Called from Bridge"""
-    tData = ast.literal_eval(cDataIP)
-    cls.cEnv               = tData['cEnv'              ]
-    cls.bLiveEnv           = tData['bLiveEnv'          ]
-    cls.cUserID            = tData['cUserID'           ]
-    cls.cUiMode            = tData['cUiMode'           ]
-    cls.cAsMode            = tData['cAsMode'           ]
-    cls.cLayer             = tData['cLayer'            ]
-    cls.cLang              = tData['cLang'             ]
-    cls.cUserID            = tData['cUserID'           ]
-    cls.cOsUserID          = tData['cOsUserID'         ]
-    cls.cLogDir            = tData['cLogDir'           ]
-    cls.cSharedIniDir      = tData['cSharedIniDir'     ]
-    cls.cSessionPid        = tData['cSessionPid'       ]
-    cls.cSessionHostname   = tData['cSessionHostname'  ]
-    cls.cSessionGuid       = tData['cSessionGuid'      ]
-    cls.cSessionGuidShort  = tData['cSessionGuidShort' ]
-    cls.cSessionGuidRemote = tData['cSessionGuidRemote']
-    cls.cOtaPath           = tData['cOtaPath'          ]
-    cls.cWorkPath          = tData['cWorkPath'         ]
-    cls.cDevIP             = tData['cDevIP'            ]
-    cls.cDevToken          = tData['cDevToken'         ]
+    cRet = ''
     try:
+      tData = ast.literal_eval(cDataIP)
+      cls.cEnv               = tData['cEnv'              ]
+      cls.bLiveEnv           = tData['bLiveEnv'          ]
+      cls.cUserID            = tData['cUserID'           ]
+      cls.cUiMode            = tData['cUiMode'           ]
+      cls.cAsMode            = tData['cAsMode'           ]
+      cls.cLayer             = tData['cLayer'            ]
+      cls.cLang              = tData['cLang'             ]
+      cls.cUserID            = tData['cUserID'           ]
+      cls.cOsUserID          = tData['cOsUserID'         ]
+      cls.cLogDir            = tData['cLogDir'           ]
+      cls.cSharedIniDir      = tData['cSharedIniDir'     ]
+      cls.cSessionPid        = tData['cSessionPid'       ]
+      cls.cSessionHostname   = tData['cSessionHostname'  ]
+      cls.cSessionGuid       = tData['cSessionGuid'      ]
+      cls.cSessionGuidShort  = tData['cSessionGuidShort' ]
+      cls.cSessionGuidRemote = tData['cSessionGuidRemote']
+      cls.cOtaPath           = tData['cOtaPath'          ]
+      cls.cWorkPath          = tData['cWorkPath'         ]
+      cls.cDevIP             = tData['cDevIP'            ]
+      cls.cDevToken          = tData['cDevToken'         ]
       cls.cLogverboseDir     = tData['cLogverboseDir'    ]
       sc_path._InheritAblEnvironmentSettings(tData)
+      cRet = 'Set environment to: %s, workpath to: %s, devtoken to: %s' % (repr(cls.cEnv),repr(cls.cWorkPath),repr(cls.cDevToken)) 
     except:
-      pass # ShouldHave: remove the try+except after sc_environment ABL changes are live
-    return 'Setting environment to: %s, workpath to: %s, devtoken to: %s' % (repr(cls.cEnv),repr(cls.cWorkPath),repr(cls.cDevToken))
+      cRet=traceback.format_exc()
+      sys.stderr.write('{0}\n'.format(cRet))
+    return cRet
 
 #EOF
