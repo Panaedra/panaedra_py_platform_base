@@ -1,9 +1,11 @@
+import os
 import ast
 import sys
-import os
+import json
 import subprocess
-from panaedra.msroot.msutil.logic.sc_path import sc_path
 import traceback
+
+from panaedra.msroot.msutil.logic.sc_path import sc_path
 
 class sc_environment:
   """Cross-platform environment and session information"""
@@ -97,4 +99,20 @@ class sc_environment:
       sys.stderr.write('{0}\n'.format(cRet))
     return cRet
 
+  @classmethod
+  def GetEnvironmentSettings(cls,cDataIP=None):
+    """Called from Bridge (optional)"""
+    tRet={}
+    for item in dir(cls):
+      o=getattr(cls,item)
+      if (not item.startswith('_') 
+        and (type(o) in (str,bool,int,float)) 
+        and len(str(o)) > 0):
+        tRet[item]=o
+    return json.dumps(tRet,indent=0)
+
+if __name__ == '__main__':
+  sc_environment.cEnv='JustTesting'
+  print sc_environment.GetEnvironmentSettings()
+  
 #EOF
