@@ -4,6 +4,7 @@ Custom helper methods for the lxml python package
 
 from lxml import etree
 from panaedra.mxroot.mxeclipse.logic.sc_hook_mxeclipse_debug import sc_hook_mxeclipse_debug
+from lxml.etree import Element
 
 class sc_msxml_lxml(object):
   
@@ -101,5 +102,30 @@ class sc_msxml_lxml(object):
         if len(cNs) > 0:
           cTagIOP = '{%s}%s' % (cNs,cTagIOP)
     return cTagIOP
+  
+  @classmethod
+  def WriteXmlToFile(cls, oXmlIP, cFilepathClasspathOP): 
+
+    cFormattedXml = sc_msxml_lxml.GetFormattedXml(oXmlIP, None) 
+    oFile         = open(cFilepathClasspathOP, "w")
+    oFile.write(cFormattedXml)
+    oFile.close()
+  
+  @classmethod 
+  def AppendElementToNode(cls, oNodeIP, cElementNameIP, tAttribute):  
+      
+      oElement = Element(cElementNameIP) 
+      # Add attributes to the element by a dictionary
+      for cKey in tAttribute.keys(): 
+        print cKey, tAttribute[cKey] 
+        oElement.set(cKey, tAttribute[cKey])
+
+      oNodeIP.append(oElement) 
+  
+  @classmethod
+  def GetParsedXmlFromFile(cls, cFilepathClasspath): 
+
+    return etree.parse(cFilepathClasspath)
+  
   
 #EOF
