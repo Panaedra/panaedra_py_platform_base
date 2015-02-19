@@ -2,14 +2,16 @@
 Custom helper methods for the lxml python package
 """
 
+
 from lxml import etree
 from panaedra.mxroot.mxeclipse.logic.sc_hook_mxeclipse_debug import sc_hook_mxeclipse_debug
 from lxml.etree import Element
 
+
 class sc_msxml_lxml(object):
   
   oDefaultParser = None
-  
+    
   @classmethod
   def GetFormattedXml(cls, oEtreeIP, oRawTransformCallback=None):
     """
@@ -104,28 +106,32 @@ class sc_msxml_lxml(object):
     return cTagIOP
   
   @classmethod
-  def WriteXmlToFile(cls, oXmlIP, cFilepathClasspathOP): 
+  def WriteXmlToFile(cls, oTreeIP, cOutputFilepathIP): 
 
-    cFormattedXml = sc_msxml_lxml.GetFormattedXml(oXmlIP, None) 
-    oFile         = open(cFilepathClasspathOP, "w")
+    cFormattedXml = cls.GetFormattedXml(oTreeIP) 
+    oFile = open(cOutputFilepathIP, "w")
     oFile.write(cFormattedXml)
     oFile.close()
   
   @classmethod 
-  def AppendElementToNode(cls, oNodeIP, cElementNameIP, tAttribute):  
+  def AppendNewElementToNode(cls, oNodeIP = "", cElementNameIP = "", cElementTextIP = "", tElementAttributeIP = {}):  
       
-      oElement = Element(cElementNameIP) 
-      # Add attributes to the element by a dictionary
-      for cKey in tAttribute.keys(): 
-        print cKey, tAttribute[cKey] 
-        oElement.set(cKey, tAttribute[cKey])
+    oElement = Element(cElementNameIP) 
+    # Add attributes to the element by a dictionary
+    for cKey in tElementAttributeIP.keys(): 
+      oElement.set(cKey, tElementAttributeIP[cKey])
 
-      oNodeIP.append(oElement) 
+    if cElementTextIP: 
+      oElement.text = cElementTextIP
+
+    oNodeIP.append(oElement)
+      
+    return oElement 
   
   @classmethod
   def GetParsedXmlFromFile(cls, cFilepathClasspath): 
-
-    return etree.parse(cFilepathClasspath)
-  
+    
+    parser = etree.XMLParser(remove_blank_text=True, strip_cdata=False)
+    return etree.parse(cFilepathClasspath, parser)
   
 #EOF
