@@ -13,11 +13,11 @@ class sc_msxml_lxml(object):
   oDefaultParser = None
     
   @classmethod
-  def GetFormattedXml(cls, oEtreeIP, oRawTransformCallback=None):
+  def GetFormattedXml(cls, oEtreeIP, oRawTransformCallback=None, cDocTypeIP = ""):
     """
     Call etree.tostring, standardized to avoid binary differences in generated/committed xml files
     """
-    cRet = etree.tostring(oEtreeIP, pretty_print=True, encoding="utf-8", with_tail=True)
+    cRet = etree.tostring(oEtreeIP, pretty_print=True, encoding="utf-8", with_tail=True, doctype=cDocTypeIP)
     
     if not oRawTransformCallback is None:
       cRet = oRawTransformCallback(cRet)
@@ -106,9 +106,9 @@ class sc_msxml_lxml(object):
     return cTagIOP
   
   @classmethod
-  def WriteXmlToFile(cls, oTreeIP, cOutputFilepathIP): 
+  def WriteXmlToFile(cls, oTreeIP, cOutputFilepathIP, cDocTypeIP=""): 
 
-    cFormattedXml = cls.GetFormattedXml(oTreeIP) 
+    cFormattedXml = cls.GetFormattedXml(oTreeIP, cDocTypeIP=cDocTypeIP) 
     oFile = open(cOutputFilepathIP, "w")
     oFile.write(cFormattedXml)
     oFile.close()
