@@ -10,7 +10,7 @@ class c_log_postponed(object):
   def __init__(self):
 
     self.oRegexMatchDigit  = re.compile(r'\d+') 
-    self.cDatetimeFormat   = '{:<24}'
+    self.cDatetimeFormat   = '{:<21}'
     self.tStatusLn         = []
   
   def GetFormattedDatetime(self):
@@ -81,7 +81,7 @@ class c_log_postponed(object):
     else: 
       self.tStatusLn.append(self.cDatetimeFormat.format('') + cStatusLnIP)
   
-  def WriteEmptyLn(self):
+  def WriteStatusEmptyLn(self):
     
     self.tStatusLn.append('') 
 
@@ -98,7 +98,7 @@ if __name__ == '__main__':
   """
   oLog = c_log_postponed()
   oLog.WriteStatusLn("test test test")
-  oLog.WriteEmptyLn()
+  oLog.WriteStatusEmptyLn()
   oLog.SetColumnProperties('''{
                                 "column1" : {
                                   "format"      : "{:<20}"
