@@ -66,7 +66,7 @@ class c_log_postponed(object):
     return cColumnHeaderLine
   
   
-  def WriteDictToStatusLn(self, tStatusDictIP): 
+  def WriteStatusDictToLn(self, tStatusDictIP): 
     
     if isinstance(tStatusDictIP, (dict)): 
       self.WriteStatusLn(self.GetStatusDictAsString(tStatusDictIP))
@@ -112,9 +112,9 @@ if __name__ == '__main__':
                               }
                            ''') 
   oLog.WriteStatusColumnHeaders()
-  oLog.WriteDictToStatusLn({'column1': 4321, 'column2': 'test sentence' })
-  oLog.WriteDictToStatusLn({'column1': 3, 'column2': 'etst' })
-  oLog.WriteDictToStatusLn({'column1': 7, 'column3': 'test tset' })
+  oLog.WriteStatusDictToLn({'column1': 4321, 'column2': 'test sentence' })
+  oLog.WriteStatusDictToLn({'column1': 3, 'column2': 'etst' })
+  oLog.WriteStatusDictToLn({'column1': 7, 'column3': 'test tset' })
  
   print oLog.ToString()
   """

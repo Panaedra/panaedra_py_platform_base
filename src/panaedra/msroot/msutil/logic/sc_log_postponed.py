@@ -10,6 +10,7 @@ class sc_log_postponed(object):
 
    
 if __name__ == '__main__':
+  ''' 
   oLog = sc_log_postponed.GetLoggerPostponed()
   oLog.WriteStatusLn('TSTSTSTSTSTST SSSSSTTT')
   oLog.WriteEmptyLn()
@@ -27,11 +28,11 @@ if __name__ == '__main__':
                            ''') 
  
   oLog.WriteStatusColumnHeaders()
-  oLog.WriteDictToStatusLn({'column1': 123, 'column2': 'test zinnetje' })
-  oLog.WriteDictToStatusLn({'column1': 3, 'column2': 'spin' })
-  oLog.WriteDictToStatusLn({'column1': 7, 'column3': 'testje' })
+  oLog.WriteStatusDictToLn({'column1': 123, 'column2': 'test zinnetje' })
+  oLog.WriteStatusDictToLn({'column1': 3, 'column2': 'spin' })
+  oLog.WriteStatusDictToLn({'column1': 7, 'column3': 'testje' })
  
   print oLog.ToString()
-  """
-  """
+
+  '''
 # EOF   
