@@ -1,9 +1,13 @@
 import os.path
+import datetime
+import json
+import re
 
 from panaedra.msroot.msutil.logic.sc_path import sc_path
 from panaedra.msroot.msflux.logic_xu.sc_msflux_shutdownrequest_xu import sc_environment
 from panaedra.msroot.msutil.logic.sc_date_timestamp import sc_date_timestamp
 from panaedra.msroot.msutil.logic.c_log_postponed import c_log_postponed
+from collections import OrderedDict
 
 class sc_log(object):
   '''Factory class
@@ -26,11 +30,15 @@ class c_mslog(object):
   def __init__(self, cLognameIP, cSublogdirIP=None):
     '''Constructor
     '''
-    self.cLogname = cLognameIP
-    self.cSublogdir = cSublogdirIP
+    self.cLogname                  =  cLognameIP
+    self.cSublogdir                = cSublogdirIP
     self._cSnapshotLogFileNamePrev = None 
-    self._cSnapshotSuffix = None
-    self.bIncludeTimeStamp = True
+    self._cSnapshotSuffix          = None
+    self.bIncludeTimeStamp         = True
+    self.tColumnProperties         = None
+    self.oRegexMatchDigit          = re.compile(r'\d+') 
+    self.cDatetimeFormat           = '{:<21}'
+    self.tStatusLn                 = []  
       
     '''Set this property to add an own header to the status log, 
        the normal header will be placed underneath this one'''
@@ -49,7 +57,6 @@ class c_mslog(object):
     * something else was written in between. Also at day switch.'''
     self.bAutoHeaders = None 
     
-    
     if False:
       '''BoB: Pydev type hinting, epydoc, sphinx or assert implementations not working. 2014Q3'''
       self.cLogname                  = ''
@@ -57,7 +64,27 @@ class c_mslog(object):
       self._cSnapshotLogFileNamePrev = '' 
       self._cSnapshotSuffix          = ''   
       '''EoB: Pydev type hinting, epydoc, sphinx or assert implementations not working. 2014Q3''' 
-      
+  
+  
+  def cLogFileName(self): 
+    
+    if sc_environment.bLiveEnv == True: 
+      cEnv = 'live' 
+    else: 
+      cEnv = 'nonlive' 
+    
+    cRet = '{0[dir]}/{0[subdir]}{0[logname]}_{0[env]}_{0[stamp]}_{0[sfx]}.log'.format(
+      {'dir'         : sc_environment.cLogDir,
+       'subdir'      : '' if (self.cSublogdir is None or len(self.cSublogdir) == 0) else self.cSublogdir + '/',
+       'logname'     : self.cLogname,
+       'env'         : cEnv,
+       'stamp'       : sc_date_timestamp.cTimeStamp_Short_Date(),
+       'sfx'         : '' if (self._cSnapshotSuffix is None or len(self._cSnapshotSuffix) == 0) else self._cSnapshotSuffix.lower() + '_',
+       })
+     
+    return os.path.normpath(cRet)
+
+  
   def cSnapshotLogFileName(self):
     
     cRet = '{0[dir]}/{0[subdir]}{0[logname]}_{0[env]}_{0[stamp]}_{0[sfx]}snapshot.log'.format(
@@ -78,6 +105,7 @@ class c_mslog(object):
       # ShouldHave: correct file rights, like in abl
     return cRet  
 
+
   def SnapshotStatus(self, cSuffixIP, cMessageIP):
     ''' Write a snapshot file. 
        The separate snapshot file will be overwritten with each call.'''
@@ -91,25 +119,85 @@ class c_mslog(object):
 
     
   def WriteStatus(self, cMessageIP): 
-    pass
+    
+    with open(self.cLogFileName(), "a") as oFile:
+      oFile.write(cMessageIP)
+
+  
+  def WriteStatusLn(self, cMessageIP): 
+    
+    self.WriteStatus('{0}\n'.format(cMessageIP))
   
   
   def WriteStatusEmptyLn(self): 
-    pass 
+    
+    self.WriteStatus('{0}\n'.format(''))
+    
+   
+  def GetFormattedDatetime(self):
+    
+    return self.cDatetimeFormat.format(datetime.datetime.strftime(datetime.datetime.now(), '%Y-%m-%d %H:%M:%S'))
+  
+  
+  def GetJsonAsOrderedDict(self, cJsonIP): 
+
+    return json.loads(cJsonIP, object_pairs_hook=OrderedDict)
+  
+  
+  def SetColumnProperties(self, cColumnPropertiesAsJsonIP): 
+    
+    self.tColumnProperties = self.GetJsonAsOrderedDict(cColumnPropertiesAsJsonIP)
     
   
+  def GetStatusDictAsString(self, tStatusDictIP):
+ 
+    cStatusLn = ''
+    if self.tColumnProperties is None: 
+      for cStatusDictKey in tStatusDictIP.iterkeys(): 
+        cStatusLn = '{0} {1}'.format(cStatusLn, tStatusDictIP[cStatusDictKey])
+    else:   
+      for cColumnTitle in self.tColumnProperties.keys(): 
+        tOneColumnProperty = self.tColumnProperties[cColumnTitle]
+        if isinstance(tOneColumnProperty, (dict)) and \
+           tOneColumnProperty.has_key('format')   and \
+           tStatusDictIP.has_key(cColumnTitle): 
+          cColumnLn = tStatusDictIP[cColumnTitle]
+        else: 
+          cColumnLn = '' 
+        cStatusLn += tOneColumnProperty['format'].format(cColumnLn)
+        
+    return cStatusLn 
+   
+   
+  def WriteStatusColumnHeaders(self): 
+    if not self.tColumnProperties is None: 
+      cColumnHeaderLine = ''
+      for cColumnTitle in self.tColumnProperties.iterkeys(): 
+        tOneColumnProperty = self.tColumnProperties[cColumnTitle]
+        if isinstance(tOneColumnProperty, (dict)) and tOneColumnProperty.has_key('format'): 
+          cColumnHeaderLine += tOneColumnProperty['format'].format(cColumnTitle)  
+      self.WriteStatusLn(cColumnHeaderLine, bDatetimeStamp=False)  
+      self.WriteStatusLn(self.WriteHeaderSeparatorLines(), bDatetimeStamp=False)  
+
+    
+  def WriteHeaderSeparatorLines(self): 
+    cColumnHeaderLine = ''
+    for cColumnTitle in self.tColumnProperties.iterkeys(): 
+      cColumnHeaderLine += '{s:{c}^{n}}'.format(s='',n=self.oRegexMatchDigit.search(self.tColumnProperties[cColumnTitle]['format']).group(0),c='-')
+    return cColumnHeaderLine
+  
+  
+  def WriteStatusDictToLn(self, tStatusDictIP): 
+    
+    if isinstance(tStatusDictIP, (dict)): 
+      self.WriteStatus('{0}\n'.format(self.GetStatusDictAsString(tStatusDictIP)))
+    else: 
+      raise TypeError('The input to WriteStatusArrayToLn is not a dictionary {}')
+ 
+    
   def WriteStatusInit(self, hBufferReportIP): 
     '''formatted with columns with buffer/query , field-handles possible''' 
     pass 
-  
-  
-  def WriteStatusHeader(self, hBufferReportIP): 
-    pass 
-  
-  
-  def WriteStatusLnBuf(self, hBufferReportIP): 
-    pass 
-  
   
  
   def SnapshotStatusLnBuf(self, cSuffixIP):
@@ -146,5 +234,20 @@ class c_mslog(object):
     '''signal the end of the logging'''
     pass 
 
+if __name__ == '__main__':
+  
+  '''
+  sc_environment.cLogDir = 'e:/'
+  oLog1 = c_mslog('test1', '')
+  oLog1.WriteStatusLn('test')
+  oLog1.WriteStatusDictToLn({ 'a': 1, 'b' : 2})
 
+  oLog2 = c_mslog('test2', '')
+  oLog2.WriteStatusLn('test')
+  oLog2.WriteStatusDictToLn({ 'a': 1, 'b' : 2})
+  
+  oLog3 = c_mslog('test3', '')
+  oLog3.WriteStatusLn('test')
+  oLog3.WriteStatusDictToLn({ 'a': 1, 'b' : 2})
+  '''
 #EOF
