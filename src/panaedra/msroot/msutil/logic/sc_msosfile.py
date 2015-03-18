@@ -4,10 +4,8 @@ class sc_msosfile(object):
   @classmethod
   def WriteStringToFile(cls, cFilepathIP, cStringIP):      
     
-    with open(cFilepathIP, 'w') as strFile:
+    with open(cFilepathIP, 'wb') as strFile:
       strFile.write(cStringIP)
-      strFile.close
-      
 
   @classmethod  
   def GetFileSectionAsString(cls, cInputFilepathIP, iStartBytePositionIP, iFilePortionExtentIP):   
