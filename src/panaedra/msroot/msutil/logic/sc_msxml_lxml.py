@@ -1,6 +1,6 @@
-"""
+'''
 Custom helper methods for the lxml python package
-"""
+'''
 
 
 from lxml import etree
@@ -13,11 +13,11 @@ class sc_msxml_lxml(object):
   oDefaultParser = None
     
   @classmethod
-  def GetFormattedXml(cls, oEtreeIP, oRawTransformCallback=None, cDocTypeIP = ""):
-    """
+  def GetFormattedXml(cls, oEtreeIP, oRawTransformCallback=None, cDocTypeIP = ''):
+    '''
     Call etree.tostring, standardized to avoid binary differences in generated/committed xml files
-    """
-    cRet = etree.tostring(oEtreeIP, pretty_print=True, encoding="utf-8", with_tail=True, doctype=cDocTypeIP)
+    '''
+    cRet = etree.tostring(oEtreeIP, pretty_print=True, encoding='utf-8', with_tail=True, doctype=cDocTypeIP)
     
     if not oRawTransformCallback is None:
       cRet = oRawTransformCallback(cRet)
@@ -33,10 +33,10 @@ class sc_msxml_lxml(object):
 
   @classmethod
   def ChildnodesToDict(cls, oEtreeIP, cXpathRootIP, cChildnodenameIP, cXpathChildKeyIP, tNsIP):
-    """
+    '''
     Create a dictionary by iteration the children of a node, and creating a key by 'text' of the supplied xpath.
     The python built-in Ellipsis object is used as a key to store the root node.
-    """
+    '''
     tRet = {}
     
     oRoot = None
@@ -80,9 +80,9 @@ class sc_msxml_lxml(object):
   def CompactNamespace(cls, oEtreeIP):
     tag = oEtreeIP.tag
     for ns in oEtreeIP.nsmap:
-      prefix = "{"+oEtreeIP.nsmap[ns]+"}"
+      prefix = '{' + oEtreeIP.nsmap[ns] + '}'
       if tag.startswith(prefix):               
-        return ns+":"+tag[len(prefix):]
+        return ns + ':' + tag[len(prefix):]
     return tag
 
   @classmethod
@@ -106,15 +106,15 @@ class sc_msxml_lxml(object):
     return cTagIOP
   
   @classmethod
-  def WriteXmlToFile(cls, oTreeIP, cOutputFilepathIP, cDocTypeIP=""): 
+  def WriteXmlToFile(cls, oTreeIP, cOutputFilepathIP, cDocTypeIP=''): 
 
     cFormattedXml = cls.GetFormattedXml(oTreeIP, cDocTypeIP=cDocTypeIP) 
-    oFile = open(cOutputFilepathIP, "w")
+    oFile = open(cOutputFilepathIP, 'w')
     oFile.write(cFormattedXml)
     oFile.close()
   
   @classmethod 
-  def AppendNewElementToNode(cls, oNodeIP = "", cElementNameIP = "", cElementTextIP = "", tElementAttributeIP = {}):  
+  def AppendNewElementToNode(cls, oNodeIP = '', cElementNameIP = '', cElementTextIP = '', tElementAttributeIP = {}):  
       
     oElement = Element(cElementNameIP) 
     # Add attributes to the element by a dictionary
