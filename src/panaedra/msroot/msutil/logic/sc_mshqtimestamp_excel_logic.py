@@ -124,6 +124,21 @@ class sc_mshqtimestamp_excel_logic(object):
     for i in range(len(sHeading.tHeadings)):
       oWorksheet.write_column(iDataStartRow, iDataStartCol + i,  tData[i])
     
+    # Charts
+    
+    oChart = oWorkbook.add_chart({'type': 'bar'})
+    
+    #     [sheetname, first_row, first_col, last_row, last_col]
+    oChart.add_series(
+      {
+        'values':     ['Sheet1', 1, sHeading.LoopDeltaX + 1, len(tData[sHeading.LoopDeltaX]), sHeading.LoopDeltaX + 1],
+        'line':       {'color': 'gray'},
+      }
+    )
+        
+    # Insert the chart into the worksheet.
+    oWorksheet.insert_chart('A3', oChart)
+    
     oWorkbook.close()
   
   @classmethod
