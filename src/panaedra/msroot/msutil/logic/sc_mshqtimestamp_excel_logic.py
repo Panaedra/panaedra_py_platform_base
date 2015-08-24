@@ -3,7 +3,7 @@ import os
 
 class sc_mshqtimestamp_excel_logic(object):
   
-  iSummaryRow=0  
+  iSummaryRow=0
   
   @classmethod
   def TimestampFileToExcel(cls, cFileIP):
@@ -17,18 +17,21 @@ class sc_mshqtimestamp_excel_logic(object):
     oFixedfont.set_font_size(10)
     
     class sHeading(object):
-      tHeadings = ['Line', 'Time', 'ProcID', 'Proc', 'Delta', 'LoopStart', 'LoopDelta', 'Var', 'LoopNo', 'LoopAt', 'LoopDeltaX']
-      Line        , \
-      Time        , \
-      ProcID      , \
-      Proc        , \
-      Delta       , \
-      LoopStart   , \
-      LoopDelta   , \
-      Var         , \
-      LoopNo      , \
-      LoopAt      , \
-      LoopDeltaX  = range(len(tHeadings))
+      tHeadings = ('Line', 'Time', 'ProcID', 'Proc', 'Delta', 'LoopStart', 'LoopDelta', 'LoopDeltaA', 'LoopDeltaB', 'Var', 'LoopNo', 'LoopAt', 'LoopDeltaX', )
+      LoopDeltaAB = [None,None]
+      Line           , \
+      Time           , \
+      ProcID         , \
+      Proc           , \
+      Delta          , \
+      LoopStart      , \
+      LoopDelta      , \
+      LoopDeltaAB[0] , \
+      LoopDeltaAB[1] , \
+      Var            , \
+      LoopNo         , \
+      LoopAt         , \
+      LoopDeltaX     = range(len(tHeadings))
     
     tData=[]
     for i in range(len(sHeading.tHeadings)):  
@@ -81,8 +84,12 @@ class sc_mshqtimestamp_excel_logic(object):
     iPrev=0
     tLoop=[]
     for i in range(iTotalLines):
+      tData[sHeading.LoopDeltaAB[(iLoop + 1) % 2]].append(None)
+      tData[sHeading.LoopDeltaAB[iLoop % 2]].append(0.0)
       if not tData[sHeading.LoopStart][i] == True:
         tData[sHeading.LoopDelta][i] = None
+        fZoomDelta=tData[sHeading.Time][i] - (0.0 if fTimePrev is None else fTimePrev)
+        tData[sHeading.LoopDeltaAB[iLoop % 2]][i]=fZoomDelta
       else:
         tData[sHeading.LoopDelta][i] = None
         if fTimePrev!=None:
@@ -93,6 +100,9 @@ class sc_mshqtimestamp_excel_logic(object):
           tData[sHeading.LoopAt].append(tData[sHeading.Time][i])
           tData[sHeading.LoopDeltaX].append(fLoopDelta)
           tLoop.append([iPrev,i])
+          
+          tData[sHeading.LoopDeltaAB[iLoop % 2]][i]=0.0
+          tData[sHeading.LoopDeltaAB[(iLoop + 1) % 2]][i]=fLoopDelta
         fTimePrev=tData[sHeading.Time][i]
         iPrev=i
     
@@ -127,6 +137,9 @@ class sc_mshqtimestamp_excel_logic(object):
     SetColumn_Width(sHeading.LoopAt, 12)
     SetColumn_Width(sHeading.LoopDeltaX, 12)
     
+    SetColumn_Width(sHeading.LoopDeltaAB[0], 14)
+    SetColumn_Width(sHeading.LoopDeltaAB[1], 14)
+    
     oWorksheet.write_row(iDataStartRow-1, iDataStartCol, sHeading.tHeadings, oBold)
     
     for i in range(len(sHeading.tHeadings)):
@@ -140,8 +153,9 @@ class sc_mshqtimestamp_excel_logic(object):
     # [sheetname, first_row, first_col, last_row, last_col]
     oChartAll.add_series(
       {
-        'values':     ['Sheet1', 1, sHeading.LoopDeltaX + 1, len(tData[sHeading.LoopDeltaX]), sHeading.LoopDeltaX + 1],
-        'line':       {'color': 'gray'},
+        'values':  ['Sheet1', 1, sHeading.LoopDeltaX + 1, len(tData[sHeading.LoopDeltaX]), sHeading.LoopDeltaX + 1],
+        'line'  :  {'color': 'gray'},
+        'gap'   :  0,
       }
     )
     
@@ -165,7 +179,7 @@ class sc_mshqtimestamp_excel_logic(object):
     
     cls.AddToSummary(oWorksheet, oFixedfont, 'Fastest loop: iteration {:>10}, {:>-17.9f} seconds'.format(repr(tDeltaMin),fDeltaMin))
     cls.AddToSummary(oWorksheet, oFixedfont, 'Slowest loop: iteration {:>10}, {:>-17.9f} seconds'.format(repr(tDeltaMax),fDeltaMax))
-    cls.AddToSummary(oWorksheet, oFixedfont, 'Slowest / faster ratio:       (1 to {:>-17.9f})'.format(fDeltaMax / fDeltaMin))
+    cls.AddToSummary(oWorksheet, oFixedfont, 'Slowest / fastest ratio:       (1 to {:>-17.9f})'.format(fDeltaMax / fDeltaMin))
 
     # Chart: slowest
 
@@ -173,8 +187,9 @@ class sc_mshqtimestamp_excel_logic(object):
     # [sheetname, first_row, first_col, last_row, last_col]
     oChartSlowest.add_series(
       {
-        'values':     ['Sheet1', tLoop[tDeltaMax[0]][0] + 1, sHeading.Time + 1, tLoop[tDeltaMax[0]][1] + 1, sHeading.Time + 1],
-        'line':       {'color': 'gray'},
+        'values':  ['Sheet1', tLoop[tDeltaMax[0]][0] + 1, sHeading.Time + 1, tLoop[tDeltaMax[0]][1] + 1, sHeading.Time + 1],
+        'line'  :  {'color': 'gray'},
+        'gap'   :  0,
       }
     )
     
@@ -194,8 +209,9 @@ class sc_mshqtimestamp_excel_logic(object):
     # [sheetname, first_row, first_col, last_row, last_col]
     oChartFastest.add_series(
       {
-        'values':     ['Sheet1', tLoop[tDeltaMin[0]][0] + 1, sHeading.Time + 1, tLoop[tDeltaMin[0]][1] + 1, sHeading.Time + 1],
-        'line':       {'color': 'gray'},
+        'values':  ['Sheet1', tLoop[tDeltaMin[0]][0] + 1, sHeading.Time + 1, tLoop[tDeltaMin[0]][1] + 1, sHeading.Time + 1],
+        'line'  :  {'color': 'gray'},
+        'gap'   :  0,
       }
     )
     
@@ -207,6 +223,37 @@ class sc_mshqtimestamp_excel_logic(object):
     
     # Insert the chart into the worksheet.
     oWorksheet.insert_chart(cls.iSummaryRow + 1, 0, oChartFastest)
+    cls.iSummaryRow+=15
+    
+    # Chart: slowest and fastest
+
+    oChartSlowAndFastest = oWorkbook.add_chart({'type': 'bar'})
+    # [sheetname, first_row, first_col, last_row, last_col]
+    oChartSlowAndFastest.add_series(
+      {
+        'name'  :  'fastest',
+        'values':  ['Sheet1', tLoop[tDeltaMin[0]][0] + 1, sHeading.Time + 1, tLoop[tDeltaMin[0]][1] + 1, sHeading.Time + 1, ],
+        'line'  :  {'color': 'green'},
+        'gap'   :  0,
+      }
+    )
+    
+    oChartSlowAndFastest.add_series(
+      {
+        'name'  :  'slowest',
+        'values':  ['Sheet1', tLoop[tDeltaMax[0]][0] + 1, sHeading.Time + 1, tLoop[tDeltaMax[0]][1] + 1, sHeading.Time + 1, ],
+        'line'  :  {'color': 'gray'},
+      }
+    )
+    
+    oChartSlowAndFastest.set_legend({'none': True})    
+    oChartSlowAndFastest.set_size({'width': 565, 'height': 300})
+    oChartSlowAndFastest.set_y_axis({'reverse': True})
+    
+    cls.AddToSummary(oWorksheet, oFixedfont, 'Chart: Slowest+Fastest comparison, zoomed in, line {} to {}'.format(tLoop[tDeltaMin[0]][0], tLoop[tDeltaMin[0]][1]))
+    
+    # Insert the chart into the worksheet.
+    oWorksheet.insert_chart(cls.iSummaryRow + 1, 0, oChartSlowAndFastest)
     cls.iSummaryRow+=15
     
     oWorkbook.close()
