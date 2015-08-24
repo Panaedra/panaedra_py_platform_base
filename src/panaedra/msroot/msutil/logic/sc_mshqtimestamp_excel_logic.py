@@ -162,6 +162,7 @@ class sc_mshqtimestamp_excel_logic(object):
     oChartAll.set_legend({'none': True})    
     oChartAll.set_size({'width': 565, 'height': 300})
     oChartAll.set_y_axis({'reverse': True})
+    oChartAll.set_title({'none': True})
     
     cls.AddToSummary(oWorksheet, oFixedfont, 'Chart: All loops, delta in seconds')
     
@@ -189,8 +190,10 @@ class sc_mshqtimestamp_excel_logic(object):
     # [sheetname, first_row, first_col, last_row, last_col]
     oChartSlowest.add_series(
       {
+        'name'  :  'slowest',
         'values':  ['Sheet1', tLoop[iLoopFirstDeltaMax][0] + 1, sHeading.Time + 1, tLoop[iLoopFirstDeltaMax][1] + 1, sHeading.Time + 1],
-        'line'  :  {'color': 'gray'},
+        'line'  :  {'color': 'silver'},
+        'fill'  :  {'color': 'gray'},
         'gap'   :  0,
       }
     )
@@ -198,6 +201,7 @@ class sc_mshqtimestamp_excel_logic(object):
     oChartSlowest.set_legend({'none': True})    
     oChartSlowest.set_size({'width': 565, 'height': 300})
     oChartSlowest.set_y_axis({'reverse': True})
+    oChartSlowest.set_title({'none': True})
     
     cls.AddToSummary(oWorksheet, oFixedfont, 'Chart: Slowest loop ({}), zoomed in, line {} to {}'.format(iLoopFirstDeltaMax,tLoop[iLoopFirstDeltaMax][0], tLoop[iLoopFirstDeltaMax][1]))
     
@@ -211,8 +215,10 @@ class sc_mshqtimestamp_excel_logic(object):
     # [sheetname, first_row, first_col, last_row, last_col]
     oChartFastest.add_series(
       {
+        'name'  :  'fastest',
         'values':  ['Sheet1', tLoop[iLoopFirstDeltaMin][0] + 1, sHeading.Time + 1, tLoop[iLoopFirstDeltaMin][1] + 1, sHeading.Time + 1],
-        'line'  :  {'color': 'gray'},
+        'line'  :  {'color': 'silver'},
+        'fill'  :  {'color': 'green'},
         'gap'   :  0,
       }
     )
@@ -220,6 +226,7 @@ class sc_mshqtimestamp_excel_logic(object):
     oChartFastest.set_legend({'none': True})    
     oChartFastest.set_size({'width': 565, 'height': 300})
     oChartFastest.set_y_axis({'reverse': True})
+    oChartFastest.set_title({'none': True})
     
     cls.AddToSummary(oWorksheet, oFixedfont, 'Chart: Fastest loop ({}), zoomed in, line {} to {}'.format(iLoopFirstDeltaMin,tLoop[iLoopFirstDeltaMin][0], tLoop[iLoopFirstDeltaMin][1]))
     
@@ -235,7 +242,8 @@ class sc_mshqtimestamp_excel_logic(object):
       {
         'name'  :  'fastest',
         'values':  ['Sheet1', tLoop[iLoopFirstDeltaMin][0] + 1, sHeading.LoopDeltaAB[iLoopFirstDeltaMin % 2] + 1, tLoop[iLoopFirstDeltaMin][1] + 1, sHeading.LoopDeltaAB[iLoopFirstDeltaMin % 2] + 1, ],
-        'line'  :  {'color': 'green'},
+        'line'  :  {'color': 'silver'},
+        'fill'  :  {'color': 'green'},
         'gap'   :  0,
       }
     )
@@ -244,13 +252,15 @@ class sc_mshqtimestamp_excel_logic(object):
       {
         'name'  :  'slowest',
         'values':  ['Sheet1', tLoop[iLoopFirstDeltaMax][0] + 1, sHeading.LoopDeltaAB[iLoopFirstDeltaMax % 2] + 1, tLoop[iLoopFirstDeltaMax][1] + 1, sHeading.LoopDeltaAB[iLoopFirstDeltaMax % 2] + 1, ],
-        'line'  :  {'color': 'gray'},
+        'line'  :  {'color': 'silver'},
+        'fill'  :  {'color': 'gray'},
       }
     )
     
     oChartSlowAndFastest.set_legend({'none': True})
     oChartSlowAndFastest.set_size({'width': 565, 'height': 300})
     oChartSlowAndFastest.set_y_axis({'reverse': True})
+    oChartSlowAndFastest.set_title({'none': True})
     
     cls.AddToSummary(oWorksheet, oFixedfont, 'Chart: Slowest+Fastest comparison, loop {} and {}'.format(iLoopFirstDeltaMax,iLoopFirstDeltaMin))
     
