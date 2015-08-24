@@ -155,6 +155,7 @@ class sc_mshqtimestamp_excel_logic(object):
       {
         'values':  ['Sheet1', 1, sHeading.LoopDeltaX + 1, len(tData[sHeading.LoopDeltaX]), sHeading.LoopDeltaX + 1],
         'line'  :  {'color': 'gray'},
+        'fill'  :  {'color': 'gray'},
         'gap'   :  0,
       }
     )
@@ -193,7 +194,7 @@ class sc_mshqtimestamp_excel_logic(object):
         'name'  :  'slowest',
         'values':  ['Sheet1', tLoop[iLoopFirstDeltaMax - 1][0] + 1, sHeading.Time + 1, tLoop[iLoopFirstDeltaMax - 1][1] + 1, sHeading.Time + 1],
         'line'  :  {'color': 'silver'},
-        'fill'  :  {'color': 'gray'},
+        'fill'  :  {'color': '#DD4433'},
         'gap'   :  0,
       }
     )
@@ -253,7 +254,7 @@ class sc_mshqtimestamp_excel_logic(object):
         'name'  :  'slowest',
         'values':  ['Sheet1', tLoop[iLoopFirstDeltaMax - 1][0] + 1, sHeading.LoopDeltaAB[(iLoopFirstDeltaMax - 1) % 2] + 1, tLoop[iLoopFirstDeltaMax - 1][1] + 1, sHeading.LoopDeltaAB[(iLoopFirstDeltaMax - 1) % 2] + 1, ],
         'line'  :  {'color': 'silver'},
-        'fill'  :  {'color': 'gray'},
+        'fill'  :  {'color': '#DD4433'},
       }
     )
     
