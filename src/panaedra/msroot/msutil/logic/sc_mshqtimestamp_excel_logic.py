@@ -18,17 +18,18 @@ class sc_mshqtimestamp_excel_logic(object):
     
     class sHeading(object):
       tHeadings = ['Line', 'Time', 'ProcID', 'Proc', 'Delta', 'LoopStart', 'LoopDelta', 'Var', 'LoopNo', 'LoopAt', 'LoopDeltaX']
-      Line         = 0 
-      Time         = 1
-      ProcID       = 2
-      Proc         = 3
-      Delta        = 4
-      LoopStart    = 5
-      LoopDelta    = 6
-      Var          = 7 
-      LoopNo       = 8 
-      LoopAt       = 9
-      LoopDeltaX   = 10
+      Line        , \
+      Time        , \
+      ProcID      , \
+      Proc        , \
+      Delta       , \
+      LoopStart   , \
+      LoopDelta   , \
+      Var         , \
+      LoopNo      , \
+      LoopAt      , \
+      LoopDeltaX  = range(len(tHeadings))
+    
     tData=[]
     for i in range(len(sHeading.tHeadings)):  
       tData.append([])
@@ -38,6 +39,7 @@ class sc_mshqtimestamp_excel_logic(object):
     tProcID={}
     iProcID=1
     iTotalLines=0
+    
     # Collect all data into tData
     with open(cFileIP) as f:
       for i,cLine in enumerate(f):
@@ -206,7 +208,6 @@ class sc_mshqtimestamp_excel_logic(object):
     # Insert the chart into the worksheet.
     oWorksheet.insert_chart(cls.iSummaryRow + 1, 0, oChartFastest)
     cls.iSummaryRow+=15
-    
     
     oWorkbook.close()
   
