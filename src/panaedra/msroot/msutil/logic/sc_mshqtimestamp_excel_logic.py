@@ -164,6 +164,7 @@ class sc_mshqtimestamp_excel_logic(object):
     oChartAll.set_size({'width': 565, 'height': 300})
     oChartAll.set_y_axis({'reverse': True})
     oChartAll.set_title({'none': True})
+    oChartAll.set_x_axis({'num_format': '@'}) # Overrule the format of the referred cell; just use text format because the extra precision is clutter in the X axis    
     
     cls.AddToSummary(oWorksheet, oFixedfont, 'Chart: All loops, delta in seconds')
     
@@ -203,7 +204,8 @@ class sc_mshqtimestamp_excel_logic(object):
     oChartSlowest.set_size({'width': 565, 'height': 300})
     oChartSlowest.set_y_axis({'reverse': True})
     oChartSlowest.set_title({'none': True})
-    
+    oChartSlowest.set_x_axis({'num_format': '@'}) # Overrule the format of the referred cell; just use text format because the extra precision is clutter in the X axis
+        
     cls.AddToSummary(oWorksheet, oFixedfont, 'Chart: Slowest loop ({}), zoomed in, line {} to {}'.format(iLoopFirstDeltaMax,tLoop[iLoopFirstDeltaMax][0], tLoop[iLoopFirstDeltaMax][1]))
     
     # Insert the chart into the worksheet.
@@ -228,6 +230,7 @@ class sc_mshqtimestamp_excel_logic(object):
     oChartFastest.set_size({'width': 565, 'height': 300})
     oChartFastest.set_y_axis({'reverse': True})
     oChartFastest.set_title({'none': True})
+    oChartFastest.set_x_axis({'num_format': '@'}) # Overrule the format of the referred cell; just use text format because the extra precision is clutter in the X axis    
     
     cls.AddToSummary(oWorksheet, oFixedfont, 'Chart: Fastest loop ({}), zoomed in, line {} to {}'.format(iLoopFirstDeltaMin,tLoop[iLoopFirstDeltaMin][0], tLoop[iLoopFirstDeltaMin][1]))
     
@@ -262,6 +265,7 @@ class sc_mshqtimestamp_excel_logic(object):
     oChartSlowAndFastest.set_size({'width': 565, 'height': 300})
     oChartSlowAndFastest.set_y_axis({'reverse': True})
     oChartSlowAndFastest.set_title({'none': True})
+    oChartSlowAndFastest.set_x_axis({'num_format': '@'}) # Overrule the format of the referred cell; just use text format because the extra precision is clutter in the X axis    
     
     cls.AddToSummary(oWorksheet, oFixedfont, 'Chart: Slowest+Fastest comparison, loop {} and {}'.format(iLoopFirstDeltaMax,iLoopFirstDeltaMin))
     
