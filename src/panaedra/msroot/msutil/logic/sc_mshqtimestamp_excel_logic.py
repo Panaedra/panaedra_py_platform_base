@@ -191,7 +191,7 @@ class sc_mshqtimestamp_excel_logic(object):
     oChartSlowest.add_series(
       {
         'name'  :  'slowest',
-        'values':  ['Sheet1', tLoop[iLoopFirstDeltaMax][0] + 1, sHeading.Time + 1, tLoop[iLoopFirstDeltaMax][1] + 1, sHeading.Time + 1],
+        'values':  ['Sheet1', tLoop[iLoopFirstDeltaMax - 1][0] + 1, sHeading.Time + 1, tLoop[iLoopFirstDeltaMax - 1][1] + 1, sHeading.Time + 1],
         'line'  :  {'color': 'silver'},
         'fill'  :  {'color': 'gray'},
         'gap'   :  0,
@@ -216,7 +216,7 @@ class sc_mshqtimestamp_excel_logic(object):
     oChartFastest.add_series(
       {
         'name'  :  'fastest',
-        'values':  ['Sheet1', tLoop[iLoopFirstDeltaMin][0] + 1, sHeading.Time + 1, tLoop[iLoopFirstDeltaMin][1] + 1, sHeading.Time + 1],
+        'values':  ['Sheet1', tLoop[iLoopFirstDeltaMin - 1][0] + 1, sHeading.Time + 1, tLoop[iLoopFirstDeltaMin - 1][1] + 1, sHeading.Time + 1],
         'line'  :  {'color': 'silver'},
         'fill'  :  {'color': 'green'},
         'gap'   :  0,
@@ -241,7 +241,7 @@ class sc_mshqtimestamp_excel_logic(object):
     oChartSlowAndFastest.add_series(
       {
         'name'  :  'fastest',
-        'values':  ['Sheet1', tLoop[iLoopFirstDeltaMin][0] + 1, sHeading.LoopDeltaAB[iLoopFirstDeltaMin % 2] + 1, tLoop[iLoopFirstDeltaMin][1] + 1, sHeading.LoopDeltaAB[iLoopFirstDeltaMin % 2] + 1, ],
+        'values':  ['Sheet1', tLoop[iLoopFirstDeltaMin - 1][0] + 1, sHeading.LoopDeltaAB[(iLoopFirstDeltaMin - 1) % 2] + 1, tLoop[iLoopFirstDeltaMin - 1][1] + 1, sHeading.LoopDeltaAB[(iLoopFirstDeltaMin - 1) % 2] + 1, ],
         'line'  :  {'color': 'silver'},
         'fill'  :  {'color': 'green'},
         'gap'   :  0,
@@ -251,7 +251,7 @@ class sc_mshqtimestamp_excel_logic(object):
     oChartSlowAndFastest.add_series(
       {
         'name'  :  'slowest',
-        'values':  ['Sheet1', tLoop[iLoopFirstDeltaMax][0] + 1, sHeading.LoopDeltaAB[iLoopFirstDeltaMax % 2] + 1, tLoop[iLoopFirstDeltaMax][1] + 1, sHeading.LoopDeltaAB[iLoopFirstDeltaMax % 2] + 1, ],
+        'values':  ['Sheet1', tLoop[iLoopFirstDeltaMax - 1][0] + 1, sHeading.LoopDeltaAB[(iLoopFirstDeltaMax - 1) % 2] + 1, tLoop[iLoopFirstDeltaMax - 1][1] + 1, sHeading.LoopDeltaAB[(iLoopFirstDeltaMax - 1) % 2] + 1, ],
         'line'  :  {'color': 'silver'},
         'fill'  :  {'color': 'gray'},
       }
