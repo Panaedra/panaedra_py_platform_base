@@ -100,7 +100,6 @@ class sc_mshqtimestamp_excel_logic(object):
           tData[sHeading.LoopAt].append(tData[sHeading.Time][i])
           tData[sHeading.LoopDeltaX].append(fLoopDelta)
           tLoop.append([iPrev,i])
-          
           tData[sHeading.LoopDeltaAB[iLoop % 2]][i]=0.0
           tData[sHeading.LoopDeltaAB[(iLoop + 1) % 2]][i]=fLoopDelta
         fTimePrev=tData[sHeading.Time][i]
@@ -161,7 +160,7 @@ class sc_mshqtimestamp_excel_logic(object):
     )
     
     oChartAll.set_legend({'none': True})    
-    oChartAll.set_size({'width': 1266, 'height': 300})
+    oChartAll.set_size({'width': 1266, 'height': 600})
     oChartAll.set_y_axis({'reverse': True})
     oChartAll.set_title({'none': True})
     oChartAll.set_x_axis({'num_format': '@'}) # Overrule the format of the referred cell; just use text format because the extra precision is clutter in the X axis    
@@ -170,7 +169,7 @@ class sc_mshqtimestamp_excel_logic(object):
     
     # Insert the chart into the worksheet.
     oWorksheet.insert_chart(cls.iSummaryRow + 1, 0, oChartAll)
-    cls.iSummaryRow+=15
+    cls.iSummaryRow+=30
     
     fDeltaMin=min(tData[sHeading.LoopDeltaX])
     # 1-based
