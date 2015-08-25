@@ -106,7 +106,7 @@ class sc_mshqtimestamp_excel_logic(object):
         fTimePrev=tData[sHeading.Time][i]
         iPrev=i
     
-    oWorksheet.set_column(0,0, 80)  # Column width (of summary)
+    oWorksheet.set_column(0,0, 180)  # Column width (of summary)
     cls.AddToSummary(oWorksheet, oFixedfont, 'Delta total: {} seconds'.format(fTime))
     
     iDataStartRow=1
@@ -161,7 +161,7 @@ class sc_mshqtimestamp_excel_logic(object):
     )
     
     oChartAll.set_legend({'none': True})    
-    oChartAll.set_size({'width': 565, 'height': 300})
+    oChartAll.set_size({'width': 1266, 'height': 300})
     oChartAll.set_y_axis({'reverse': True})
     oChartAll.set_title({'none': True})
     oChartAll.set_x_axis({'num_format': '@'}) # Overrule the format of the referred cell; just use text format because the extra precision is clutter in the X axis    
@@ -192,20 +192,21 @@ class sc_mshqtimestamp_excel_logic(object):
     # [sheetname, first_row, first_col, last_row, last_col]
     oChartSlowest.add_series(
       {
-        'name'  :  'slowest',
-        'values':  ['Sheet1', tLoop[iLoopFirstDeltaMax - 1][0] + 1, sHeading.Time + 1, tLoop[iLoopFirstDeltaMax - 1][1] + 1, sHeading.Time + 1],
-        'line'  :  {'color': 'silver'},
-        'fill'  :  {'color': '#DD4433'},
-        'gap'   :  0,
+        'name'       :  'slowest',
+        'categories' :  ['Sheet1', tLoop[iLoopFirstDeltaMax - 1][0] + 1, sHeading.Proc + 1, tLoop[iLoopFirstDeltaMax - 1][1] + 1, sHeading.Proc + 1],
+        'values'     :  ['Sheet1', tLoop[iLoopFirstDeltaMax - 1][0] + 1, sHeading.Time + 1, tLoop[iLoopFirstDeltaMax - 1][1] + 1, sHeading.Time + 1],
+        'line'       :  {'color': 'silver'},
+        'fill'       :  {'color': '#DD4433'},
+        'gap'        :  0,
       }
     )
     
     oChartSlowest.set_legend({'none': True})    
-    oChartSlowest.set_size({'width': 565, 'height': 300})
+    oChartSlowest.set_size({'width': 1266, 'height': 300})
     oChartSlowest.set_y_axis({'reverse': True})
     oChartSlowest.set_title({'none': True})
     oChartSlowest.set_x_axis({'num_format': '@'}) # Overrule the format of the referred cell; just use text format because the extra precision is clutter in the X axis
-        
+
     cls.AddToSummary(oWorksheet, oFixedfont, 'Chart: Slowest loop ({}), zoomed in, line {} to {}'.format(iLoopFirstDeltaMax,tLoop[iLoopFirstDeltaMax][0], tLoop[iLoopFirstDeltaMax][1]))
     
     # Insert the chart into the worksheet.
@@ -218,16 +219,17 @@ class sc_mshqtimestamp_excel_logic(object):
     # [sheetname, first_row, first_col, last_row, last_col]
     oChartFastest.add_series(
       {
-        'name'  :  'fastest',
-        'values':  ['Sheet1', tLoop[iLoopFirstDeltaMin - 1][0] + 1, sHeading.Time + 1, tLoop[iLoopFirstDeltaMin - 1][1] + 1, sHeading.Time + 1],
-        'line'  :  {'color': 'silver'},
-        'fill'  :  {'color': 'green'},
-        'gap'   :  0,
+        'name'       :  'fastest',
+        'categories' :  ['Sheet1', tLoop[iLoopFirstDeltaMin - 1][0] + 1, sHeading.Proc + 1, tLoop[iLoopFirstDeltaMin - 1][1] + 1, sHeading.Proc + 1],
+        'values'     :  ['Sheet1', tLoop[iLoopFirstDeltaMin - 1][0] + 1, sHeading.Time + 1, tLoop[iLoopFirstDeltaMin - 1][1] + 1, sHeading.Time + 1],
+        'line'       :  {'color': 'silver'},
+        'fill'       :  {'color': 'green'},
+        'gap'        :  0,
       }
     )
     
     oChartFastest.set_legend({'none': True})    
-    oChartFastest.set_size({'width': 565, 'height': 300})
+    oChartFastest.set_size({'width': 1266, 'height': 300})
     oChartFastest.set_y_axis({'reverse': True})
     oChartFastest.set_title({'none': True})
     oChartFastest.set_x_axis({'num_format': '@'}) # Overrule the format of the referred cell; just use text format because the extra precision is clutter in the X axis    
@@ -244,25 +246,27 @@ class sc_mshqtimestamp_excel_logic(object):
     # [sheetname, first_row, first_col, last_row, last_col]
     oChartSlowAndFastest.add_series(
       {
-        'name'  :  'slowest',
-        'values':  ['Sheet1', tLoop[iLoopFirstDeltaMax - 1][0] + 1, sHeading.LoopDeltaAB[(iLoopFirstDeltaMax - 1) % 2] + 1, tLoop[iLoopFirstDeltaMax - 1][1] + 1, sHeading.LoopDeltaAB[(iLoopFirstDeltaMax - 1) % 2] + 1, ],
-        'line'  :  {'color': 'silver'},
-        'fill'  :  {'color': '#DD4433'},
+        'name'       :  'slowest',
+        'categories' :  ['Sheet1', tLoop[iLoopFirstDeltaMax - 1][0] + 1, sHeading.Proc + 1, tLoop[iLoopFirstDeltaMax - 1][1] + 1, sHeading.Proc + 1, ],
+        'values'     :  ['Sheet1', tLoop[iLoopFirstDeltaMax - 1][0] + 1, sHeading.LoopDeltaAB[(iLoopFirstDeltaMax - 1) % 2] + 1, tLoop[iLoopFirstDeltaMax - 1][1] + 1, sHeading.LoopDeltaAB[(iLoopFirstDeltaMax - 1) % 2] + 1, ],
+        'line'       :  {'color': 'silver'},
+        'fill'       :  {'color': '#DD4433'},
       }
     )
     
     oChartSlowAndFastest.add_series(
       {
-        'name'  :  'fastest',
-        'values':  ['Sheet1', tLoop[iLoopFirstDeltaMin - 1][0] + 1, sHeading.LoopDeltaAB[(iLoopFirstDeltaMin - 1) % 2] + 1, tLoop[iLoopFirstDeltaMin - 1][1] + 1, sHeading.LoopDeltaAB[(iLoopFirstDeltaMin - 1) % 2] + 1, ],
-        'line'  :  {'color': 'silver'},
-        'fill'  :  {'color': 'green'},
-        'gap'   :  0,
+        'name'      :  'fastest',
+        'categories':  ['Sheet1', tLoop[iLoopFirstDeltaMin - 1][0] + 1, sHeading.Proc + 1, tLoop[iLoopFirstDeltaMin - 1][1] + 1, sHeading.Proc + 1, ],
+        'values'    :  ['Sheet1', tLoop[iLoopFirstDeltaMin - 1][0] + 1, sHeading.LoopDeltaAB[(iLoopFirstDeltaMin - 1) % 2] + 1, tLoop[iLoopFirstDeltaMin - 1][1] + 1, sHeading.LoopDeltaAB[(iLoopFirstDeltaMin - 1) % 2] + 1, ],
+        'line'      :  {'color': 'silver'},
+        'fill'      :  {'color': 'green'},
+        'gap'       :  0,
       }
     )
     
     oChartSlowAndFastest.set_legend({'none': True})
-    oChartSlowAndFastest.set_size({'width': 565, 'height': 300})
+    oChartSlowAndFastest.set_size({'width': 1266, 'height': 300})
     oChartSlowAndFastest.set_y_axis({'reverse': True})
     oChartSlowAndFastest.set_title({'none': True})
     oChartSlowAndFastest.set_x_axis({'num_format': '@'}) # Overrule the format of the referred cell; just use text format because the extra precision is clutter in the X axis    
@@ -273,6 +277,7 @@ class sc_mshqtimestamp_excel_logic(object):
     oWorksheet.insert_chart(cls.iSummaryRow + 1, 0, oChartSlowAndFastest)
     cls.iSummaryRow+=15
     
+    # Close and save the excel workbook file
     oWorkbook.close()
   
   @classmethod
