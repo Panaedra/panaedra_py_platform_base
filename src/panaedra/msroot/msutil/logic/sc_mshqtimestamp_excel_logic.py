@@ -1,6 +1,8 @@
 import xlsxwriter
 import os
 
+_PRETTIFY_WITH_TABLES=True
+
 class sc_mshqtimestamp_excel_logic(object):
   
   iSummaryRow=0
@@ -140,6 +142,31 @@ class sc_mshqtimestamp_excel_logic(object):
     SetColumn_Width(sHeading.LoopDeltaAB[1], 14)
     
     oWorksheet.write_row(iDataStartRow-1, iDataStartCol, sHeading.tHeadings, oBold)
+    
+    if _PRETTIFY_WITH_TABLES:
+      
+      # Optional. Gives pretty formatting and auto filters.
+
+      # Give some columns a bit more room, because of the auto filter
+      SetColumn_Width(sHeading.LoopStart, 11)
+      SetColumn_Width(sHeading.LoopNo, 11)
+      SetColumn_Width(sHeading.LoopDeltaX, 14)
+      
+      # Excel table for all data
+      oWorksheet.add_table(0, sHeading.Line + 1, len(tData[sHeading.Line]), sHeading.Var + 1,
+        {'name': 'AllData',
+         'style': 'Table Style Light 9',
+         'total_row': False,
+         'columns': [ {'header' : sHeading.tHeadings[x]} for x in range(sHeading.Line,sHeading.Var + 1) ],
+         })
+      
+      # Excel table for 'all' loops
+      oWorksheet.add_table(0, sHeading.LoopNo + 1, len(tData[sHeading.LoopNo]), sHeading.LoopDeltaX + 1,
+        {'name': 'AllLoops',
+         'style': 'Table Style Light 11',
+         'total_row': False,
+         'columns': [ {'header' : sHeading.tHeadings[x]} for x in range(sHeading.LoopNo,sHeading.LoopDeltaX + 1) ],
+         })
     
     for i in range(len(sHeading.tHeadings)):
       oWorksheet.write_column(iDataStartRow, iDataStartCol + i,  tData[i])
