@@ -8,7 +8,7 @@ class sc_mshqtimestamp_excel_logic(object):
   iSummaryRow=0
   
   @classmethod
-  def TimestampFileToExcel(cls, cFileIP):
+  def TimestampFileToExcel(cls, cFileIP, bPrettifyWithTablesIP=_PRETTIFY_WITH_TABLES):
     cFilepath,cFilename = os.path.split(cFileIP)
     cFilebase,dummy=os.path.splitext(cFilename)
     oWorkbook = xlsxwriter.Workbook(os.path.join(cFilepath, '{}.xlsx'.format(cFilebase)))
@@ -143,7 +143,7 @@ class sc_mshqtimestamp_excel_logic(object):
     
     oWorksheet.write_row(iDataStartRow-1, iDataStartCol, sHeading.tHeadings, oBold)
     
-    if _PRETTIFY_WITH_TABLES:
+    if bPrettifyWithTablesIP:
       
       # Optional. Gives pretty formatting and auto filters.
 
