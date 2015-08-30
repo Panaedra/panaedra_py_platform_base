@@ -55,7 +55,7 @@ class sc_mshqtimestamp_excel_logic(object):
         fTime=float(cTime)
         if fFirstTime is None: fFirstTime=fTime
         fTime-=fFirstTime
-        cProc,cProcseq,cVar=cRemainder.split('\x03')
+        cProc,cProcseq,cVar=cRemainder.split('\x03')[0:3]
         tData[sHeading.Time].append(fTime)
         if not (cProc,cProcseq) in tProcID.keys():
           tProcID[(cProc,cProcseq)]=[iProcID,i,fTime]
