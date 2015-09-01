@@ -50,7 +50,7 @@ class sc_mshqtimestamp_excel_logic(object):
       for i,cLine in enumerate(f):
         iTotalLines+=1
         tData[sHeading.Line].append(i)
-        cTime,cRemainder=cLine.rstrip().split(':')
+        cTime,cRemainder=cLine.rstrip().partition(':')[0::2]
         cRemainder=cRemainder.lstrip()
         fTime=float(cTime)
         if fFirstTime is None: fFirstTime=fTime
