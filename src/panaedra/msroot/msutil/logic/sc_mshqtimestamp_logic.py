@@ -53,20 +53,21 @@ class sc_mshqtimestamp_logic(object):
         tLine=cLine.partition(':')
         tLineData=tLine[2].lstrip().split('\x03')
         cSourceLineComment=''
-        if (len(tLineData[3]) == 0     # No line number; just copy line as-is
-            or len(tLineData[6]) > 0): # There is already data (a literal dict) present in this line; just copy line as-is
+        if (len(tLineData[3]) == 0 # No line number; just copy line as-is
+            or len(tLineData[-1].rstrip()) > 0): # There is already data (a literal dict) present in this line; just copy line as-is
           f_out.write('{}{}\n'.format(cLine.rstrip(),cSourceLineComment))
         else:
-          cRuntimeloc,cLocSequence,cSourcecodeFile,iSourcecodeLine,cVarA,cVarB=tLineData[0],tLineData[1],tLineData[2],int(tLineData[3]),tLineData[4],tLineData[5]
+          cRuntimeloc,cLocSequence,cSourcecodeFile,iSourcecodeLine,cVarA,cVarB=tLineData[0],tLineData[1],tLineData[2],int(tLineData[3]),tLineData[5],tLineData[6]
+          iSourcecodeLineTell=0
           if not tSourceComments.has_key(cSourcecodeFile):
             tSourceComments=self._ParseSourcecode(cSourcecodeFile, tSourceComments)
           if tSourceComments[cSourcecodeFile].has_key(iSourcecodeLine):
-            cSourceLineComment=tSourceComments[cSourcecodeFile][iSourcecodeLine]
+            cSourceLineComment,iSourcecodeLineTell=tSourceComments[cSourcecodeFile][iSourcecodeLine]
           if (not bDedupeIP) or (not tDedupeData.has_key((cRuntimeloc,cLocSequence,))):
             tDedupeData[(cRuntimeloc,cLocSequence,)]=None
-            f_out.write('{}{}\n'.format(cLine.rstrip(),cSourceLineComment))
+            f_out.write('{}: {}\x03{}\x03{}\x03{}\x03{}\x03{}\x03{}\x03{}\n'.format(tLine[0],cRuntimeloc,cLocSequence,cSourcecodeFile,iSourcecodeLine,iSourcecodeLineTell,cVarA,cVarB,cSourceLineComment))
           else:
-            f_out.write('{}: {}\x03{}\x03\x03\x03{}\x03{}\x03\n'.format(tLine[0],cRuntimeloc,cLocSequence,cVarA,cVarB))
+            f_out.write('{}: {}\x03{}\x03\x03\x03\x03{}\x03{}\x03\n'.format(tLine[0],cRuntimeloc,cLocSequence,cVarA,cVarB))
     
     if bReplaceFileIP:
       tHqtTmpFile=os.path.splitext(cHqtFileIP)
@@ -86,11 +87,13 @@ class sc_mshqtimestamp_logic(object):
   def _ParseSourcecode(self, cSourcecodeFileIP, tSourceCommentsIOP):
     tSourceCommentsIOP[cSourcecodeFileIP]={}
     with open(cSourcecodeFileIP,'rb') as f_sourcecode:
-      for i,cSourceLine in enumerate(f_sourcecode):
+      iBytePosPrev=0
+      for i,cSourceLine in enumerate(iter(f_sourcecode.readline, '')): # Note: 'for line in f' can't work with .tell(), because of buffering.
         if ('{&hq}' in cSourceLine):
           cSourceLineComment=cSourceLine.partition('/*')[2]
           cSourceLineComment=cSourceLineComment.rpartition('*/')[0]
-          tSourceCommentsIOP[cSourcecodeFileIP][i+1] = cSourceLineComment.strip()
+          tSourceCommentsIOP[cSourcecodeFileIP][i+1] = [cSourceLineComment.strip(), iBytePosPrev, ]
+        iBytePosPrev=f_sourcecode.tell()
     return tSourceCommentsIOP
 
 if __name__ == '__main__':
@@ -100,7 +103,7 @@ if __name__ == '__main__':
   cls.StaticMain(
     # replace-file to False for debugging only.
     "{'mode':'PyAppendTimestampsWithDict',"
-    "'cHqtFile':'X:/fluxdumpbig__dwan_idetest.txt',"
+    "'cHqtFile':'T:/ota/systeemtst/dataexchange/fluxdumpbig__dwan_idetest.txt'," # codeQok#7303
     "'dedupe': True,"
     "'replace-file': False, }"
     )
