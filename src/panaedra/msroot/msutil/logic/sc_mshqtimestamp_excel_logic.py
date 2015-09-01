@@ -1,5 +1,6 @@
 import xlsxwriter
 import os
+import ast
 
 _PRETTIFY_WITH_TABLES=True
 
@@ -12,19 +13,21 @@ class sc_mshqtimestamp_excel_logic(object):
     cFilepath,cFilename = os.path.split(cFileIP)
     cFilebase,dummy=os.path.splitext(cFilename)
     oWorkbook = xlsxwriter.Workbook(os.path.join(cFilepath, '{}.xlsx'.format(cFilebase)))
-    oWorksheet = oWorkbook.add_worksheet('Timestamps')
-    oWorksheet.set_tab_color('#11FF22')
+    oWorksheetTms = oWorkbook.add_worksheet('Timestamps')
+    oWorksheetTms.set_tab_color('#11FF22')
+    oWorksheetSfl = oWorkbook.add_worksheet('Sourcefiles')
+    oWorksheetSfl.set_tab_color('#AA3366')
     oBold = oWorkbook.add_format({'bold': 1})
     oFixedfont = oWorkbook.add_format({'bold': 0})
     oFixedfont.set_font_name('Consolas')
     oFixedfont.set_font_size(10)
     
     class sHeading(object):
-      tHeadings = ('Line', 'Time', 'ProcID', 'Proc', 'Delta', 'LoopStart', 'LoopDelta', 'LoopDeltaA', 'LoopDeltaB', 'VarA', 'VarB', 'Comment', 'LoopNo', 'LoopAt', 'LoopDeltaX', )
+      tHeadings = ('Line', 'Time', 'ProcSeq', 'Proc', 'Delta', 'LoopStart', 'LoopDelta', 'LoopDeltaA', 'LoopDeltaB', 'VarA', 'VarB', 'Comment', 'LoopNo', 'LoopAt', 'LoopDeltaX', )
       LoopDeltaAB = [None,None]
       Line           , \
       Time           , \
-      ProcID         , \
+      ProcSeq         , \
       Proc           , \
       Delta          , \
       LoopStart      , \
@@ -43,10 +46,12 @@ class sc_mshqtimestamp_excel_logic(object):
       tData.append([])
       
     fFirstTime=None
-    iLoopProcID=None
-    tProcID={}
-    iProcID=1
+    iLoopProcSeq=None
+    tProcSeq={}
+    iProcSeq=1
     iTotalLines=0
+    
+    tSourceDicts={}
     
     # Collect all data into tData
     with open(cFileIP) as f:
@@ -62,29 +67,40 @@ class sc_mshqtimestamp_excel_logic(object):
         cProc,cProcseq=tRemainder[0:2]
         cVarA,cVarB=tRemainder[5:7]
         tData[sHeading.Time].append(fTime)
-        if not (cProc,cProcseq) in tProcID.keys():
-          tProcID[(cProc,cProcseq)]=[iProcID,i,fTime]
-          iProcID+=1
+        if not (cProc,cProcseq) in tProcSeq.keys():
+          tProcSeq[(cProc,cProcseq)]=[iProcSeq,i,fTime]
+          iProcSeq+=1
         else:
-          if iLoopProcID is None:
+          if iLoopProcSeq is None:
             # This is a repetition; indicate as looppoint
-            iLoopProcID=tProcID[(cProc,cProcseq)][0]
+            iLoopProcSeq=tProcSeq[(cProc,cProcseq)][0]
             # Set first looppoint to True as well
-            tData[sHeading.LoopStart][tProcID[(cProc,cProcseq)][1]]=True
-        tData[sHeading.ProcID].append(tProcID[(cProc,cProcseq)][0])
+            tData[sHeading.LoopStart][tProcSeq[(cProc,cProcseq)][1]]=True
+        tData[sHeading.ProcSeq].append(tProcSeq[(cProc,cProcseq)][0])
         tData[sHeading.Proc].append('{}_{}'.format(cProc,cProcseq))
         if i==0:
           tData[sHeading.Delta].append(0.0)
         else:
           fDelta = tData[sHeading.Time][-1] - tData[sHeading.Time][-2]  
           tData[sHeading.Delta].append(fDelta)
-        if (not iLoopProcID is None) and (iLoopProcID==tProcID[(cProc,cProcseq)][0]):
+        if (not iLoopProcSeq is None) and (iLoopProcSeq==tProcSeq[(cProc,cProcseq)][0]):
           tData[sHeading.LoopStart].append(True)
         else:
           tData[sHeading.LoopStart].append(None)
         tData[sHeading.LoopDelta].append(None)
         tData[sHeading.VarA].append(cVarA)
         tData[sHeading.VarB].append(cVarB)
+        cComment=''
+        if not tSourceDicts.has_key((cProc,cProcseq,)):
+          tEval=ast.literal_eval(tRemainder[-1]) if len(tRemainder[-1]) > 0 else None
+          tSourceDicts[(cProc,cProcseq,)]=tEval
+          if not tEval is None and tEval.has_key('summary'):
+            cls.AddToSummary(oWorksheetTms, oFixedfont, tEval['summary'])
+        else:
+          tEval=tSourceDicts[(cProc,cProcseq,)]
+        if not tEval is None and tEval.has_key('comment'):
+          cComment= tEval['comment']
+        tData[sHeading.Comment].append(cComment)
     
     # Calculate the loop delta's
     fTimePrev=None
@@ -113,8 +129,8 @@ class sc_mshqtimestamp_excel_logic(object):
         fTimePrev=tData[sHeading.Time][i]
         iPrev=i
     
-    oWorksheet.set_column(0,0, 180)  # Column width (of summary)
-    cls.AddToSummary(oWorksheet, oFixedfont, 'Delta total: {} seconds'.format(fTime))
+    oWorksheetTms.set_column(0,0, 180)  # Column width (of summary)
+    cls.AddToSummary(oWorksheetTms, oFixedfont, 'Delta total: {} seconds'.format(fTime))
     
     iDataStartRow=1
     iDataStartCol=1
@@ -123,18 +139,18 @@ class sc_mshqtimestamp_excel_logic(object):
     oNanoFormat.set_num_format('0.000000000')
     
     def SetColumn_NanoFormat(iCol):
-      oWorksheet.set_column(iDataStartCol+iCol,iDataStartCol+iCol,cell_format=oNanoFormat)
+      oWorksheetTms.set_column(iDataStartCol+iCol,iDataStartCol+iCol,cell_format=oNanoFormat)
     
     SetColumn_NanoFormat(sHeading.Time);
     SetColumn_NanoFormat(sHeading.Delta);
     SetColumn_NanoFormat(sHeading.LoopDelta);
     
     def SetColumn_Width(iCol, iWidthIP):
-      oWorksheet.set_column(iDataStartCol+iCol,iDataStartCol+iCol, iWidthIP)
+      oWorksheetTms.set_column(iDataStartCol+iCol,iDataStartCol+iCol, iWidthIP)
     
     SetColumn_Width(sHeading.Line, 10)
     SetColumn_Width(sHeading.Time, 12)
-    SetColumn_Width(sHeading.ProcID, 8)
+    SetColumn_Width(sHeading.ProcSeq, 10)
     SetColumn_Width(sHeading.Proc, 90)
     SetColumn_Width(sHeading.Delta, 12)
     SetColumn_Width(sHeading.LoopStart, 8)
@@ -149,7 +165,7 @@ class sc_mshqtimestamp_excel_logic(object):
     SetColumn_Width(sHeading.LoopDeltaAB[0], 14)
     SetColumn_Width(sHeading.LoopDeltaAB[1], 14)
     
-    oWorksheet.write_row(iDataStartRow-1, iDataStartCol, sHeading.tHeadings, oBold)
+    oWorksheetTms.write_row(iDataStartRow-1, iDataStartCol, sHeading.tHeadings, oBold)
     
     if bPrettifyWithTablesIP:
       
@@ -161,7 +177,7 @@ class sc_mshqtimestamp_excel_logic(object):
       SetColumn_Width(sHeading.LoopDeltaX, 14)
       
       # Excel table for all data
-      oWorksheet.add_table(0, sHeading.Line + 1, len(tData[sHeading.Line]), sHeading.Comment + 1,
+      oWorksheetTms.add_table(0, sHeading.Line + 1, len(tData[sHeading.Line]), sHeading.Comment + 1,
         {'name': 'AllData',
          'style': 'Table Style Light 9',
          'total_row': False,
@@ -169,7 +185,7 @@ class sc_mshqtimestamp_excel_logic(object):
          })
       
       # Excel table for 'all' loops
-      oWorksheet.add_table(0, sHeading.LoopNo + 1, len(tData[sHeading.LoopNo]), sHeading.LoopDeltaX + 1,
+      oWorksheetTms.add_table(0, sHeading.LoopNo + 1, len(tData[sHeading.LoopNo]), sHeading.LoopDeltaX + 1,
         {'name': 'AllLoops',
          'style': 'Table Style Light 11',
          'total_row': False,
@@ -177,9 +193,9 @@ class sc_mshqtimestamp_excel_logic(object):
          })
     
     for i in range(len(sHeading.tHeadings)):
-      oWorksheet.write_column(iDataStartRow, iDataStartCol + i,  tData[i])
+      oWorksheetTms.write_column(iDataStartRow, iDataStartCol + i,  tData[i])
     
-    cls.AddToSummary(oWorksheet, oFixedfont, 'Loop count: {}'.format(len(tData[sHeading.LoopDeltaX])))
+    cls.AddToSummary(oWorksheetTms, oFixedfont, 'Loop count: {}'.format(len(tData[sHeading.LoopDeltaX])))
     
     # Chart: all
     
@@ -200,10 +216,10 @@ class sc_mshqtimestamp_excel_logic(object):
     oChartAll.set_title({'none': True})
     oChartAll.set_x_axis({'num_format': '@'}) # Overrule the format of the referred cell; just use text format because the extra precision is clutter in the X axis    
     
-    cls.AddToSummary(oWorksheet, oFixedfont, 'Chart: All loops, delta in seconds')
+    cls.AddToSummary(oWorksheetTms, oFixedfont, 'Chart: All loops, delta in seconds')
     
     # Insert the chart into the worksheet.
-    oWorksheet.insert_chart(cls.iSummaryRow + 1, 0, oChartAll)
+    oWorksheetTms.insert_chart(cls.iSummaryRow + 1, 0, oChartAll)
     cls.iSummaryRow+=30
     
     fDeltaMin=min(tData[sHeading.LoopDeltaX])
@@ -216,9 +232,9 @@ class sc_mshqtimestamp_excel_logic(object):
     tDeltaMax=[i + 1 for i, j in enumerate(tData[sHeading.LoopDeltaX]) if j == fDeltaMax]
     iLoopFirstDeltaMax=tDeltaMax[0]
     
-    cls.AddToSummary(oWorksheet, oFixedfont, 'Fastest loop: iteration {:>10}, {:>-17.9f} seconds'.format(repr(tDeltaMin),fDeltaMin))
-    cls.AddToSummary(oWorksheet, oFixedfont, 'Slowest loop: iteration {:>10}, {:>-17.9f} seconds'.format(repr(tDeltaMax),fDeltaMax))
-    cls.AddToSummary(oWorksheet, oFixedfont, 'Slowest / fastest ratio:      (1 to {:>-17.9f})'.format(fDeltaMax / fDeltaMin))
+    cls.AddToSummary(oWorksheetTms, oFixedfont, 'Fastest loop: iteration {:>10}, {:>-17.9f} seconds'.format(repr(tDeltaMin),fDeltaMin))
+    cls.AddToSummary(oWorksheetTms, oFixedfont, 'Slowest loop: iteration {:>10}, {:>-17.9f} seconds'.format(repr(tDeltaMax),fDeltaMax))
+    cls.AddToSummary(oWorksheetTms, oFixedfont, 'Slowest / fastest ratio:      (1 to {:>-17.9f})'.format(fDeltaMax / fDeltaMin))
 
     # Chart: slowest
 
@@ -241,10 +257,10 @@ class sc_mshqtimestamp_excel_logic(object):
     oChartSlowest.set_title({'none': True})
     oChartSlowest.set_x_axis({'num_format': '@'}) # Overrule the format of the referred cell; just use text format because the extra precision is clutter in the X axis
 
-    cls.AddToSummary(oWorksheet, oFixedfont, 'Chart: Slowest loop ({}), zoomed in, line {} to {}'.format(iLoopFirstDeltaMax,tLoop[iLoopFirstDeltaMax][0], tLoop[iLoopFirstDeltaMax][1]))
+    cls.AddToSummary(oWorksheetTms, oFixedfont, 'Chart: Slowest loop ({}), zoomed in, line {} to {}'.format(iLoopFirstDeltaMax,tLoop[iLoopFirstDeltaMax][0], tLoop[iLoopFirstDeltaMax][1]))
     
     # Insert the chart into the worksheet.
-    oWorksheet.insert_chart(cls.iSummaryRow + 1, 0, oChartSlowest)
+    oWorksheetTms.insert_chart(cls.iSummaryRow + 1, 0, oChartSlowest)
     cls.iSummaryRow+=15
     
     # Chart: fastest
@@ -268,10 +284,10 @@ class sc_mshqtimestamp_excel_logic(object):
     oChartFastest.set_title({'none': True})
     oChartFastest.set_x_axis({'num_format': '@'}) # Overrule the format of the referred cell; just use text format because the extra precision is clutter in the X axis    
     
-    cls.AddToSummary(oWorksheet, oFixedfont, 'Chart: Fastest loop ({}), zoomed in, line {} to {}'.format(iLoopFirstDeltaMin,tLoop[iLoopFirstDeltaMin][0], tLoop[iLoopFirstDeltaMin][1]))
+    cls.AddToSummary(oWorksheetTms, oFixedfont, 'Chart: Fastest loop ({}), zoomed in, line {} to {}'.format(iLoopFirstDeltaMin,tLoop[iLoopFirstDeltaMin][0], tLoop[iLoopFirstDeltaMin][1]))
     
     # Insert the chart into the worksheet.
-    oWorksheet.insert_chart(cls.iSummaryRow + 1, 0, oChartFastest)
+    oWorksheetTms.insert_chart(cls.iSummaryRow + 1, 0, oChartFastest)
     cls.iSummaryRow+=15
     
     # Chart: slowest and fastest
@@ -305,14 +321,14 @@ class sc_mshqtimestamp_excel_logic(object):
     oChartSlowAndFastest.set_title({'none': True})
     oChartSlowAndFastest.set_x_axis({'num_format': '@'}) # Overrule the format of the referred cell; just use text format because the extra precision is clutter in the X axis    
     
-    cls.AddToSummary(oWorksheet, oFixedfont, 'Chart: Slowest+Fastest comparison, loop {} and {}'.format(iLoopFirstDeltaMax,iLoopFirstDeltaMin))
+    cls.AddToSummary(oWorksheetTms, oFixedfont, 'Chart: Slowest+Fastest comparison, loop {} and {}'.format(iLoopFirstDeltaMax,iLoopFirstDeltaMin))
     
     # Insert the chart into the worksheet.
-    oWorksheet.insert_chart(cls.iSummaryRow + 1, 0, oChartSlowAndFastest)
+    oWorksheetTms.insert_chart(cls.iSummaryRow + 1, 0, oChartSlowAndFastest)
     cls.iSummaryRow+=15
     
     # Freeze the first row.
-    oWorksheet.freeze_panes(1, 0)
+    oWorksheetTms.freeze_panes(1, 0)
     
     # Close and save the excel workbook file
     oWorkbook.close()
