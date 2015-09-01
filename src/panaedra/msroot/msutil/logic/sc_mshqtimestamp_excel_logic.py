@@ -23,11 +23,11 @@ class sc_mshqtimestamp_excel_logic(object):
     oFixedfont.set_font_size(10)
     
     class sHeading(object):
-      tHeadings = ('Line', 'Time', 'ProcSeq', 'Proc', 'Delta', 'LoopStart', 'LoopDelta', 'LoopDeltaA', 'LoopDeltaB', 'VarA', 'VarB', 'Comment', 'LoopNo', 'LoopAt', 'LoopDeltaX', )
+      tHeadings = ('Line', 'Time', 'ProcUid', 'Proc', 'Delta', 'LoopStart', 'LoopDelta', 'LoopDeltaA', 'LoopDeltaB', 'VarA', 'VarB', 'Comment', 'LoopNo', 'LoopAt', 'LoopDeltaX', )
       LoopDeltaAB = [None,None]
       Line           , \
       Time           , \
-      ProcSeq         , \
+      ProcUid        , \
       Proc           , \
       Delta          , \
       LoopStart      , \
@@ -46,9 +46,9 @@ class sc_mshqtimestamp_excel_logic(object):
       tData.append([])
       
     fFirstTime=None
-    iLoopProcSeq=None
-    tProcSeq={}
-    iProcSeq=1
+    iLoopProcUid=None
+    tProcUid={}
+    iProcUid=1
     iTotalLines=0
     
     tSourceDicts={}
@@ -67,30 +67,29 @@ class sc_mshqtimestamp_excel_logic(object):
         cProc,cProcseq=tRemainder[0:2]
         cVarA,cVarB=tRemainder[5:7]
         tData[sHeading.Time].append(fTime)
-        if not (cProc,cProcseq) in tProcSeq.keys():
-          tProcSeq[(cProc,cProcseq)]=[iProcSeq,i,fTime]
-          iProcSeq+=1
+        if not (cProc,cProcseq) in tProcUid.keys():
+          tProcUid[(cProc,cProcseq)]=[iProcUid,i,fTime]
+          iProcUid+=1
         else:
-          if iLoopProcSeq is None:
+          if iLoopProcUid is None:
             # This is a repetition; indicate as looppoint
-            iLoopProcSeq=tProcSeq[(cProc,cProcseq)][0]
+            iLoopProcUid=tProcUid[(cProc,cProcseq)][0]
             # Set first looppoint to True as well
-            tData[sHeading.LoopStart][tProcSeq[(cProc,cProcseq)][1]]=True
-        tData[sHeading.ProcSeq].append(tProcSeq[(cProc,cProcseq)][0])
-        tData[sHeading.Proc].append('{}_{}'.format(cProc,cProcseq))
+            tData[sHeading.LoopStart][tProcUid[(cProc,cProcseq)][1]]=True
+        tData[sHeading.ProcUid].append(tProcUid[(cProc,cProcseq)][0])
         if i==0:
           tData[sHeading.Delta].append(0.0)
         else:
           fDelta = tData[sHeading.Time][-1] - tData[sHeading.Time][-2]  
           tData[sHeading.Delta].append(fDelta)
-        if (not iLoopProcSeq is None) and (iLoopProcSeq==tProcSeq[(cProc,cProcseq)][0]):
+        if (not iLoopProcUid is None) and (iLoopProcUid==tProcUid[(cProc,cProcseq)][0]):
           tData[sHeading.LoopStart].append(True)
         else:
           tData[sHeading.LoopStart].append(None)
         tData[sHeading.LoopDelta].append(None)
         tData[sHeading.VarA].append(cVarA)
         tData[sHeading.VarB].append(cVarB)
-        cComment=''
+        cComment,cProcID='',''
         if not tSourceDicts.has_key((cProc,cProcseq,)):
           tEval=ast.literal_eval(tRemainder[-1]) if len(tRemainder[-1]) > 0 else None
           tSourceDicts[(cProc,cProcseq,)]=tEval
@@ -101,6 +100,9 @@ class sc_mshqtimestamp_excel_logic(object):
         if not tEval is None and tEval.has_key('comment'):
           cComment= tEval['comment']
         tData[sHeading.Comment].append(cComment)
+        if not tEval is None and tEval.has_key('id'):
+          cProcID= tEval['id']
+        tData[sHeading.Proc].append('{}_{}{}'.format(cProc,cProcseq, '_{}'.format(cProcID) if len(cProcID) > 0 else ''))
     
     # Calculate the loop delta's
     fTimePrev=None
@@ -150,7 +152,7 @@ class sc_mshqtimestamp_excel_logic(object):
     
     SetColumn_Width(sHeading.Line, 10)
     SetColumn_Width(sHeading.Time, 12)
-    SetColumn_Width(sHeading.ProcSeq, 10)
+    SetColumn_Width(sHeading.ProcUid, 10)
     SetColumn_Width(sHeading.Proc, 90)
     SetColumn_Width(sHeading.Delta, 12)
     SetColumn_Width(sHeading.LoopStart, 8)
