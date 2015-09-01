@@ -23,10 +23,13 @@ class sc_mshqtimestamp_excel_logic(object):
     oFixedfont.set_font_size(10)
     
     class sHeading(object):
-      tHeadings = ('Line', 'Time', 'ProcUid', 'Proc', 'Delta', 'LoopStart', 'LoopDelta', 'LoopDeltaA', 'LoopDeltaB', 'VarA', 'VarB', 'Comment', 'LoopNo', 'LoopAt', 'LoopDeltaX', )
+      tHeadings = ('Line', 'Time', 'VarA', 'VarB', 'Comment', 'ProcUid', 'Proc', 'Delta', 'LoopStart', 'LoopDelta', 'LoopDeltaA', 'LoopDeltaB', 'LoopNo', 'LoopAt', 'LoopDeltaX', )
       LoopDeltaAB = [None,None]
       Line           , \
       Time           , \
+      VarA           , \
+      VarB           , \
+      Comment        , \
       ProcUid        , \
       Proc           , \
       Delta          , \
@@ -34,9 +37,6 @@ class sc_mshqtimestamp_excel_logic(object):
       LoopDelta      , \
       LoopDeltaAB[0] , \
       LoopDeltaAB[1] , \
-      VarA           , \
-      VarB           , \
-      Comment        , \
       LoopNo         , \
       LoopAt         , \
       LoopDeltaX     = range(len(tHeadings))
@@ -179,11 +179,11 @@ class sc_mshqtimestamp_excel_logic(object):
       SetColumn_Width(sHeading.LoopDeltaX, 14)
       
       # Excel table for all data
-      oWorksheetTms.add_table(0, sHeading.Line + 1, len(tData[sHeading.Line]), sHeading.Comment + 1,
+      oWorksheetTms.add_table(0, sHeading.Line + 1, len(tData[sHeading.Line]), sHeading.LoopDeltaAB[1] + 1,
         {'name': 'AllData',
          'style': 'Table Style Light 9',
          'total_row': False,
-         'columns': [ {'header' : sHeading.tHeadings[x]} for x in range(sHeading.Line,sHeading.Comment + 1) ],
+         'columns': [ {'header' : sHeading.tHeadings[x]} for x in range(sHeading.Line,sHeading.LoopDeltaAB[1] + 1) ],
          })
       
       # Excel table for 'all' loops
