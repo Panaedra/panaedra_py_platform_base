@@ -12,14 +12,15 @@ class sc_mshqtimestamp_excel_logic(object):
     cFilepath,cFilename = os.path.split(cFileIP)
     cFilebase,dummy=os.path.splitext(cFilename)
     oWorkbook = xlsxwriter.Workbook(os.path.join(cFilepath, '{}.xlsx'.format(cFilebase)))
-    oWorksheet = oWorkbook.add_worksheet()
+    oWorksheet = oWorkbook.add_worksheet('Timestamps')
+    oWorksheet.set_tab_color('#11FF22')
     oBold = oWorkbook.add_format({'bold': 1})
     oFixedfont = oWorkbook.add_format({'bold': 0})
     oFixedfont.set_font_name('Consolas')
     oFixedfont.set_font_size(10)
     
     class sHeading(object):
-      tHeadings = ('Line', 'Time', 'ProcID', 'Proc', 'Delta', 'LoopStart', 'LoopDelta', 'LoopDeltaA', 'LoopDeltaB', 'Var', 'LoopNo', 'LoopAt', 'LoopDeltaX', )
+      tHeadings = ('Line', 'Time', 'ProcID', 'Proc', 'Delta', 'LoopStart', 'LoopDelta', 'LoopDeltaA', 'LoopDeltaB', 'VarA', 'VarB', 'Comment', 'LoopNo', 'LoopAt', 'LoopDeltaX', )
       LoopDeltaAB = [None,None]
       Line           , \
       Time           , \
@@ -30,7 +31,9 @@ class sc_mshqtimestamp_excel_logic(object):
       LoopDelta      , \
       LoopDeltaAB[0] , \
       LoopDeltaAB[1] , \
-      Var            , \
+      VarA           , \
+      VarB           , \
+      Comment        , \
       LoopNo         , \
       LoopAt         , \
       LoopDeltaX     = range(len(tHeadings))
@@ -55,7 +58,9 @@ class sc_mshqtimestamp_excel_logic(object):
         fTime=float(cTime)
         if fFirstTime is None: fFirstTime=fTime
         fTime-=fFirstTime
-        cProc,cProcseq,cVar=cRemainder.split('\x03')[0:3]
+        tRemainder=cRemainder.split('\x03')
+        cProc,cProcseq=tRemainder[0:2]
+        cVarA,cVarB=tRemainder[5:7]
         tData[sHeading.Time].append(fTime)
         if not (cProc,cProcseq) in tProcID.keys():
           tProcID[(cProc,cProcseq)]=[iProcID,i,fTime]
@@ -78,7 +83,8 @@ class sc_mshqtimestamp_excel_logic(object):
         else:
           tData[sHeading.LoopStart].append(None)
         tData[sHeading.LoopDelta].append(None)
-        tData[sHeading.Var].append(cVar)
+        tData[sHeading.VarA].append(cVarA)
+        tData[sHeading.VarB].append(cVarB)
     
     # Calculate the loop delta's
     fTimePrev=None
@@ -133,7 +139,9 @@ class sc_mshqtimestamp_excel_logic(object):
     SetColumn_Width(sHeading.Delta, 12)
     SetColumn_Width(sHeading.LoopStart, 8)
     SetColumn_Width(sHeading.LoopDelta, 12)
-    SetColumn_Width(sHeading.Var, 50)
+    SetColumn_Width(sHeading.VarA, 50)
+    SetColumn_Width(sHeading.VarB, 50)
+    SetColumn_Width(sHeading.Comment, 50)
     SetColumn_Width(sHeading.LoopNo, 8)
     SetColumn_Width(sHeading.LoopAt, 12)
     SetColumn_Width(sHeading.LoopDeltaX, 12)
@@ -153,11 +161,11 @@ class sc_mshqtimestamp_excel_logic(object):
       SetColumn_Width(sHeading.LoopDeltaX, 14)
       
       # Excel table for all data
-      oWorksheet.add_table(0, sHeading.Line + 1, len(tData[sHeading.Line]), sHeading.Var + 1,
+      oWorksheet.add_table(0, sHeading.Line + 1, len(tData[sHeading.Line]), sHeading.Comment + 1,
         {'name': 'AllData',
          'style': 'Table Style Light 9',
          'total_row': False,
-         'columns': [ {'header' : sHeading.tHeadings[x]} for x in range(sHeading.Line,sHeading.Var + 1) ],
+         'columns': [ {'header' : sHeading.tHeadings[x]} for x in range(sHeading.Line,sHeading.Comment + 1) ],
          })
       
       # Excel table for 'all' loops
@@ -179,7 +187,7 @@ class sc_mshqtimestamp_excel_logic(object):
     # [sheetname, first_row, first_col, last_row, last_col]
     oChartAll.add_series(
       {
-        'values':  ['Sheet1', 1, sHeading.LoopDeltaX + 1, len(tData[sHeading.LoopDeltaX]), sHeading.LoopDeltaX + 1],
+        'values':  ['Timestamps', 1, sHeading.LoopDeltaX + 1, len(tData[sHeading.LoopDeltaX]), sHeading.LoopDeltaX + 1],
         'line'  :  {'color': 'gray'},
         'fill'  :  {'color': 'gray'},
         'gap'   :  0,
@@ -219,8 +227,8 @@ class sc_mshqtimestamp_excel_logic(object):
     oChartSlowest.add_series(
       {
         'name'       :  'slowest',
-        'categories' :  ['Sheet1', tLoop[iLoopFirstDeltaMax - 1][0] + 1, sHeading.Proc + 1, tLoop[iLoopFirstDeltaMax - 1][1] + 1, sHeading.Proc + 1],
-        'values'     :  ['Sheet1', tLoop[iLoopFirstDeltaMax - 1][0] + 1, sHeading.Time + 1, tLoop[iLoopFirstDeltaMax - 1][1] + 1, sHeading.Time + 1],
+        'categories' :  ['Timestamps', tLoop[iLoopFirstDeltaMax - 1][0] + 1, sHeading.Proc + 1, tLoop[iLoopFirstDeltaMax - 1][1] + 1, sHeading.Proc + 1],
+        'values'     :  ['Timestamps', tLoop[iLoopFirstDeltaMax - 1][0] + 1, sHeading.Time + 1, tLoop[iLoopFirstDeltaMax - 1][1] + 1, sHeading.Time + 1],
         'line'       :  {'color': 'silver'},
         'fill'       :  {'color': '#DD4433'},
         'gap'        :  0,
@@ -246,8 +254,8 @@ class sc_mshqtimestamp_excel_logic(object):
     oChartFastest.add_series(
       {
         'name'       :  'fastest',
-        'categories' :  ['Sheet1', tLoop[iLoopFirstDeltaMin - 1][0] + 1, sHeading.Proc + 1, tLoop[iLoopFirstDeltaMin - 1][1] + 1, sHeading.Proc + 1],
-        'values'     :  ['Sheet1', tLoop[iLoopFirstDeltaMin - 1][0] + 1, sHeading.Time + 1, tLoop[iLoopFirstDeltaMin - 1][1] + 1, sHeading.Time + 1],
+        'categories' :  ['Timestamps', tLoop[iLoopFirstDeltaMin - 1][0] + 1, sHeading.Proc + 1, tLoop[iLoopFirstDeltaMin - 1][1] + 1, sHeading.Proc + 1],
+        'values'     :  ['Timestamps', tLoop[iLoopFirstDeltaMin - 1][0] + 1, sHeading.Time + 1, tLoop[iLoopFirstDeltaMin - 1][1] + 1, sHeading.Time + 1],
         'line'       :  {'color': 'silver'},
         'fill'       :  {'color': 'green'},
         'gap'        :  0,
@@ -273,8 +281,8 @@ class sc_mshqtimestamp_excel_logic(object):
     oChartSlowAndFastest.add_series(
       {
         'name'       :  'slowest',
-        'categories' :  ['Sheet1', tLoop[iLoopFirstDeltaMax - 1][0] + 1, sHeading.Proc + 1, tLoop[iLoopFirstDeltaMax - 1][1] + 1, sHeading.Proc + 1, ],
-        'values'     :  ['Sheet1', tLoop[iLoopFirstDeltaMax - 1][0] + 1, sHeading.LoopDeltaAB[(iLoopFirstDeltaMax - 1) % 2] + 1, tLoop[iLoopFirstDeltaMax - 1][1] + 1, sHeading.LoopDeltaAB[(iLoopFirstDeltaMax - 1) % 2] + 1, ],
+        'categories' :  ['Timestamps', tLoop[iLoopFirstDeltaMax - 1][0] + 1, sHeading.Proc + 1, tLoop[iLoopFirstDeltaMax - 1][1] + 1, sHeading.Proc + 1, ],
+        'values'     :  ['Timestamps', tLoop[iLoopFirstDeltaMax - 1][0] + 1, sHeading.LoopDeltaAB[(iLoopFirstDeltaMax - 1) % 2] + 1, tLoop[iLoopFirstDeltaMax - 1][1] + 1, sHeading.LoopDeltaAB[(iLoopFirstDeltaMax - 1) % 2] + 1, ],
         'line'       :  {'color': 'silver'},
         'fill'       :  {'color': '#DD4433'},
       }
@@ -283,8 +291,8 @@ class sc_mshqtimestamp_excel_logic(object):
     oChartSlowAndFastest.add_series(
       {
         'name'      :  'fastest',
-        'categories':  ['Sheet1', tLoop[iLoopFirstDeltaMin - 1][0] + 1, sHeading.Proc + 1, tLoop[iLoopFirstDeltaMin - 1][1] + 1, sHeading.Proc + 1, ],
-        'values'    :  ['Sheet1', tLoop[iLoopFirstDeltaMin - 1][0] + 1, sHeading.LoopDeltaAB[(iLoopFirstDeltaMin - 1) % 2] + 1, tLoop[iLoopFirstDeltaMin - 1][1] + 1, sHeading.LoopDeltaAB[(iLoopFirstDeltaMin - 1) % 2] + 1, ],
+        'categories':  ['Timestamps', tLoop[iLoopFirstDeltaMin - 1][0] + 1, sHeading.Proc + 1, tLoop[iLoopFirstDeltaMin - 1][1] + 1, sHeading.Proc + 1, ],
+        'values'    :  ['Timestamps', tLoop[iLoopFirstDeltaMin - 1][0] + 1, sHeading.LoopDeltaAB[(iLoopFirstDeltaMin - 1) % 2] + 1, tLoop[iLoopFirstDeltaMin - 1][1] + 1, sHeading.LoopDeltaAB[(iLoopFirstDeltaMin - 1) % 2] + 1, ],
         'line'      :  {'color': 'silver'},
         'fill'      :  {'color': 'green'},
         'gap'       :  0,
@@ -302,6 +310,9 @@ class sc_mshqtimestamp_excel_logic(object):
     # Insert the chart into the worksheet.
     oWorksheet.insert_chart(cls.iSummaryRow + 1, 0, oChartSlowAndFastest)
     cls.iSummaryRow+=15
+    
+    # Freeze the first row.
+    oWorksheet.freeze_panes(1, 0)
     
     # Close and save the excel workbook file
     oWorkbook.close()
