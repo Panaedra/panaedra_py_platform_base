@@ -50,59 +50,65 @@ class sc_mshqtimestamp_excel_logic(object):
     tProcUid={}
     iProcUid=1
     iTotalLines=0
-    
     tSourceDicts={}
     
     # Collect all data into tData
     with open(cFileIP) as f:
       for i,cLine in enumerate(f):
-        iTotalLines+=1
-        tData[sHeading.Line].append(i)
-        cTime,cRemainder=cLine.rstrip().partition(':')[0::2]
-        cRemainder=cRemainder.lstrip()
-        fTime=float(cTime)
-        if fFirstTime is None: fFirstTime=fTime
-        fTime-=fFirstTime
-        tRemainder=cRemainder.split('\x03')
-        cProc,cProcseq=tRemainder[0:2]
-        cVarA,cVarB=tRemainder[5:7]
-        tData[sHeading.Time].append(fTime)
-        if not (cProc,cProcseq) in tProcUid.keys():
-          tProcUid[(cProc,cProcseq)]=[iProcUid,i,fTime]
-          iProcUid+=1
+        if cLine.startswith('Hqts_Additional_Info:'):
+          cEval=cLine.rstrip().partition(':')[2].lstrip()
+          if cEval.startswith('{'):
+            tAdditionalInfo=ast.literal_eval(cEval)
+            if tAdditionalInfo.has_key('summary'):
+              cls.AddToSummary(oWorksheetTms, oFixedfont, tAdditionalInfo['summary'])
         else:
-          if iLoopProcUid is None:
-            # This is a repetition; indicate as looppoint
-            iLoopProcUid=tProcUid[(cProc,cProcseq)][0]
-            # Set first looppoint to True as well
-            tData[sHeading.LoopStart][tProcUid[(cProc,cProcseq)][1]]=True
-        tData[sHeading.ProcUid].append(tProcUid[(cProc,cProcseq)][0])
-        if i==0:
-          tData[sHeading.Delta].append(0.0)
-        else:
-          fDelta = tData[sHeading.Time][-1] - tData[sHeading.Time][-2]  
-          tData[sHeading.Delta].append(fDelta)
-        if (not iLoopProcUid is None) and (iLoopProcUid==tProcUid[(cProc,cProcseq)][0]):
-          tData[sHeading.LoopStart].append(True)
-        else:
-          tData[sHeading.LoopStart].append(None)
-        tData[sHeading.LoopDelta].append(None)
-        tData[sHeading.VarA].append(cVarA)
-        tData[sHeading.VarB].append(cVarB)
-        cComment,cProcID='',''
-        if not tSourceDicts.has_key((cProc,cProcseq,)):
-          tEval=ast.literal_eval(tRemainder[-1]) if len(tRemainder[-1]) > 0 else None
-          tSourceDicts[(cProc,cProcseq,)]=tEval
-          if not tEval is None and tEval.has_key('summary'):
-            cls.AddToSummary(oWorksheetTms, oFixedfont, tEval['summary'])
-        else:
-          tEval=tSourceDicts[(cProc,cProcseq,)]
-        if not tEval is None and tEval.has_key('comment'):
-          cComment= tEval['comment']
-        tData[sHeading.Comment].append(cComment)
-        if not tEval is None and tEval.has_key('id'):
-          cProcID= tEval['id']
-        tData[sHeading.Proc].append('{}_{}{}'.format(cProc,cProcseq, '_{}'.format(cProcID) if len(cProcID) > 0 else ''))
+          iTotalLines+=1
+          tData[sHeading.Line].append(i+1)
+          cTime,cRemainder=cLine.rstrip().partition(':')[0::2]
+          cRemainder=cRemainder.lstrip()
+          fTime=float(cTime)
+          if fFirstTime is None: fFirstTime=fTime
+          fTime-=fFirstTime
+          tRemainder=cRemainder.split('\x03')
+          cProc,cProcseq=tRemainder[0:2]
+          cVarA,cVarB=tRemainder[5:7]
+          tData[sHeading.Time].append(fTime)
+          if not (cProc,cProcseq) in tProcUid.keys():
+            tProcUid[(cProc,cProcseq)]=[iProcUid,i,fTime]
+            iProcUid+=1
+          else:
+            if iLoopProcUid is None:
+              # This is a repetition; indicate as looppoint
+              iLoopProcUid=tProcUid[(cProc,cProcseq)][0]
+              # Set first looppoint to True as well
+              tData[sHeading.LoopStart][tProcUid[(cProc,cProcseq)][1]]=True
+          tData[sHeading.ProcUid].append(tProcUid[(cProc,cProcseq)][0])
+          if iTotalLines==1:
+            tData[sHeading.Delta].append(0.0)
+          else:
+            fDelta = tData[sHeading.Time][-1] - tData[sHeading.Time][-2]  
+            tData[sHeading.Delta].append(fDelta)
+          if (not iLoopProcUid is None) and (iLoopProcUid==tProcUid[(cProc,cProcseq)][0]):
+            tData[sHeading.LoopStart].append(True)
+          else:
+            tData[sHeading.LoopStart].append(None)
+          tData[sHeading.LoopDelta].append(None)
+          tData[sHeading.VarA].append(cVarA)
+          tData[sHeading.VarB].append(cVarB)
+          cComment,cProcID='',''
+          if not tSourceDicts.has_key((cProc,cProcseq,)):
+            tEval=ast.literal_eval(tRemainder[-1]) if len(tRemainder[-1]) > 0 else None
+            tSourceDicts[(cProc,cProcseq,)]=tEval
+            if not tEval is None and tEval.has_key('summary'):
+              cls.AddToSummary(oWorksheetTms, oFixedfont, tEval['summary'])
+          else:
+            tEval=tSourceDicts[(cProc,cProcseq,)]
+          if not tEval is None and tEval.has_key('comment'):
+            cComment= tEval['comment']
+          tData[sHeading.Comment].append(cComment)
+          if not tEval is None and tEval.has_key('id'):
+            cProcID= tEval['id']
+          tData[sHeading.Proc].append('{}_{}{}'.format(cProc,cProcseq, '_{}'.format(cProcID) if len(cProcID) > 0 else ''))
     
     # Calculate the loop delta's
     fTimePrev=None
