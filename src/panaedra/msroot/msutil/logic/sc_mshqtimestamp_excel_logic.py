@@ -1,6 +1,7 @@
 import xlsxwriter
 import os
 import ast
+from collections import OrderedDict
 
 ROWHDR=0
 ROWONE=1
@@ -64,7 +65,8 @@ class sc_mshqtimestamp_excel_logic(object):
     tProcUid={}
     iProcUid=1
     iTotalLines=0
-    tSourceDicts={}
+    tSourceDicts=OrderedDict()
+    tAdditionalInfo=OrderedDict()
     
     # Collect all data into tDataTms
     with open(cFileIP) as f:
@@ -72,9 +74,10 @@ class sc_mshqtimestamp_excel_logic(object):
         if cLine.startswith('Hqts_Additional_Info:'):
           cEval=cLine.rstrip().partition(':')[2].lstrip()
           if cEval.startswith('{'):
-            tAdditionalInfo=ast.literal_eval(cEval)
-            if tAdditionalInfo.has_key('summary'):
-              cls.AddToSummary(oWorksheetSmy, oFixedfont, tAdditionalInfo['summary'])
+            tAddEval=ast.literal_eval(cEval)
+            if tAddEval.has_key('summary'):
+              cls.AddToSummary(oWorksheetSmy, oFixedfont, tAddEval['summary'])
+            tAdditionalInfo[i] = tAddEval
         else:
           iTotalLines+=1
           tDataTms[sHeadingTms.Line].append(i+1)
@@ -115,6 +118,11 @@ class sc_mshqtimestamp_excel_logic(object):
             tSourceDicts[(cProc,cProcseq,)]=tEval
             if not tEval is None and tEval.has_key('summary'):
               cls.AddToSummary(oWorksheetSmy, oFixedfont, tEval['summary'])
+            if tEval is None:
+              tSourceDicts[(cProc,cProcseq,)]={}
+            tSourceDicts[(cProc,cProcseq,)]['fullpath']    = tRemainder[2]
+            tSourceDicts[(cProc,cProcseq,)]['line']        = int(tRemainder[3]) if len(tRemainder[3]) > 0 else None
+            tSourceDicts[(cProc,cProcseq,)]['byte-offset'] = int(tRemainder[4]) if len(tRemainder[4]) > 0 else None
           else:
             tEval=tSourceDicts[(cProc,cProcseq,)]
           if not tEval is None and tEval.has_key('comment'):
@@ -336,9 +344,36 @@ class sc_mshqtimestamp_excel_logic(object):
     oWorksheetSmy.insert_chart(cls.iSummaryRow + 1, 0, oChartSlowAndFastest)
     cls.iSummaryRow+=15
     
+    # Make the source file list
+    tHeadersSfl=[ 'Source','Line','Byte-Offset','Seq','ID','Comment', ]
+    oWorksheetSfl.write_row(ROWHDR, 0, tHeadersSfl, oBold)
+    for i,(key,value) in enumerate(tSourceDicts.iteritems()):
+      oWorksheetSfl.write_row(i + ROWONE, 0, [ 
+        key[0], 
+        value.get('line',None)        if not value is None else None, 
+        value.get('byte-offset',None) if not value is None else None, 
+        key[1], 
+        value.get('id',None)          if not value is None else None, 
+        value.get('comment',None)     if not value is None else None,
+        ], None)
+
+    # Autofilter the source file list
+    oWorksheetSfl.autofilter(0, 0, len(tSourceDicts), len(tHeadersSfl) - 1)
+    
+    def SetColumnSfl_Width(iCol, iWidthIP):
+      oWorksheetSfl.set_column(iCol,iCol, iWidthIP)
+    
+    SetColumnSfl_Width(0,100)
+    SetColumnSfl_Width(1,9)
+    SetColumnSfl_Width(2,13)
+    SetColumnSfl_Width(3,9)
+    SetColumnSfl_Width(4,12)
+    SetColumnSfl_Width(5,50)
+    
     # Freeze the first row and first col.
     oWorksheetTms.freeze_panes(1, 1)
     oWorksheetLps.freeze_panes(1, 1)
+    oWorksheetSfl.freeze_panes(1, 2)
     
     # Close and save the excel workbook file
     oWorkbook.close()
@@ -348,7 +383,7 @@ class sc_mshqtimestamp_excel_logic(object):
     print cSummaryLineIP
     oWorksheetIP.write_string(cls.iSummaryRow + 1,0,cSummaryLineIP, oFixedfontIP)
     cls.iSummaryRow+=1
-    
+  
 if __name__ == '__main__':
   sc_mshqtimestamp_excel_logic.TimestampFileToExcel(r'T:\ota\systeemtst\dataexchange\fluxdumpbig__dwan_idetest.txt')
 
