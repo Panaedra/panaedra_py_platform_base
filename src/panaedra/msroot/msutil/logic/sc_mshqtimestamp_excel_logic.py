@@ -19,17 +19,22 @@ class sc_mshqtimestamp_excel_logic(object):
     oWorksheetSmy.set_tab_color('#8888FF')
     oWorksheetTms = oWorkbook.add_worksheet('Timestamps')
     oWorksheetTms.set_tab_color('#11FF22')
+    oTitleTms = oWorkbook.add_format({'bold': 1, 'bg_color': '#99FF77'})
     oWorksheetLps = oWorkbook.add_worksheet('Loops')
     oWorksheetLps.set_tab_color('#11F182')
+    oTitleLps = oWorkbook.add_format({'bold': 1, 'bg_color': '#99F188'})
     oWorksheetWat = oWorkbook.add_worksheet('Watches')
     oWorksheetWat.set_tab_color('#F1E122')
+    oTitleWat = oWorkbook.add_format({'bold': 1, 'bg_color': '#F1E122'}) # @UnusedVariable
     oWorksheetSfl = oWorkbook.add_worksheet('Sourcefiles')
     oWorksheetSfl.set_tab_color('#BB77EE')
-    oBold = oWorkbook.add_format({'bold': 1})
+    oTitleSfl = oWorkbook.add_format({'bold': 1, 'bg_color': '#EDBADE'})
     oFixedfont = oWorkbook.add_format({'bold': 0})
     oFixedfont.set_font_name('Consolas')
     oFixedfont.set_font_size(10)
-    
+    oNanoFormat = oWorkbook.add_format()
+    oNanoFormat.set_num_format('0.000000000')
+
     class sHeadingTms(object):
       tHeadings = ('Line', 'Time', 'VarA', 'VarB', 'Comment', 'ProcUid', 'Proc', 'Delta', 'LoopStart', 'LoopDelta', 'LoopDeltaA', 'LoopDeltaB', )
       LoopDeltaAB = [None,None]
@@ -162,25 +167,24 @@ class sc_mshqtimestamp_excel_logic(object):
     oWorksheetSmy.set_column(0, 0, 180)  # Column width (of summary)
     cls.AddToSummary(oWorksheetSmy, oFixedfont, 'Delta total: {} seconds'.format(fTime))
     
-    oNanoFormat = oWorkbook.add_format()
-    oNanoFormat.set_num_format('0.000000000')
-    
     def SetColumnTms_NanoFormat(iCol):
       oWorksheetTms.set_column(iCol,iCol,cell_format=oNanoFormat)
+    
+    def SetColumnTms_Width(iCol, iWidthIP):
+      oWorksheetTms.set_column(iCol,iCol, iWidthIP)
     
     SetColumnTms_NanoFormat(sHeadingTms.Time);
     SetColumnTms_NanoFormat(sHeadingTms.Delta);
     SetColumnTms_NanoFormat(sHeadingTms.LoopDelta);
-    
-    def SetColumnTms_Width(iCol, iWidthIP):
-      oWorksheetTms.set_column(iCol,iCol, iWidthIP)
+    SetColumnTms_NanoFormat(sHeadingTms.LoopDeltaAB[0]);
+    SetColumnTms_NanoFormat(sHeadingTms.LoopDeltaAB[1]);
     
     SetColumnTms_Width(sHeadingTms.Line, 10)
     SetColumnTms_Width(sHeadingTms.Time, 12)
     SetColumnTms_Width(sHeadingTms.ProcUid, 10)
     SetColumnTms_Width(sHeadingTms.Proc, 90)
     SetColumnTms_Width(sHeadingTms.Delta, 12)
-    SetColumnTms_Width(sHeadingTms.LoopStart, 9)
+    SetColumnTms_Width(sHeadingTms.LoopStart, 11)
     SetColumnTms_Width(sHeadingTms.LoopDelta, 12)
     SetColumnTms_Width(sHeadingTms.VarA, 50)
     SetColumnTms_Width(sHeadingTms.VarB, 50)
@@ -188,21 +192,35 @@ class sc_mshqtimestamp_excel_logic(object):
     SetColumnTms_Width(sHeadingTms.LoopDeltaAB[0], 14)
     SetColumnTms_Width(sHeadingTms.LoopDeltaAB[1], 14)
     
+    def SetColumnLps_NanoFormat(iCol):
+      oWorksheetLps.set_column(iCol,iCol,cell_format=oNanoFormat)
+    
     def SetColumnLps_Width(iCol, iWidthIP):
       oWorksheetLps.set_column(iCol,iCol, iWidthIP)
     
-    SetColumnLps_Width(sHeadingLps.LoopNo, 8)
-    SetColumnLps_Width(sHeadingLps.LoopAt, 12)
-    SetColumnLps_Width(sHeadingLps.LoopDeltaX, 12)
+    SetColumnLps_NanoFormat(sHeadingLps.LoopAt)
+    SetColumnLps_NanoFormat(sHeadingLps.LoopDeltaX)
     
-    oWorksheetTms.write_row(ROWHDR, 0, sHeadingTms.tHeadings, oBold)
-    oWorksheetLps.write_row(ROWHDR, 0, sHeadingLps.tHeadings, oBold)
+    SetColumnLps_Width(sHeadingLps.LoopNo, 11)
+    SetColumnLps_Width(sHeadingLps.LoopAt, 14)
+    SetColumnLps_Width(sHeadingLps.LoopDeltaX, 14)
     
+    oWorksheetTms.write_row(ROWHDR, 0, sHeadingTms.tHeadings, oTitleTms)
+    oWorksheetLps.write_row(ROWHDR, 0, sHeadingLps.tHeadings, oTitleLps)
+    
+    # Data for the timestamps sheet
     for i in range(len(sHeadingTms.tHeadings)):
       oWorksheetTms.write_column(ROWONE, i,  tDataTms[i])
+      
+    # Autofilter the timestamp sheet
+    oWorksheetTms.autofilter(0, 0, len(tDataTms[sHeadingTms.Line]) - 1, len(sHeadingTms.tHeadings) - 1)
     
+    # Data for the loops sheet
     for i in range(len(sHeadingLps.tHeadings)):
       oWorksheetLps.write_column(ROWONE, i,  tDataLps[i])
+    
+    # Autofilter the loops sheet
+    oWorksheetLps.autofilter(0, 0, len(tDataLps[sHeadingLps.LoopNo]) - 1, len(sHeadingLps.tHeadings) - 1)
     
     cls.AddToSummary(oWorksheetSmy, oFixedfont, 'Loop count: {}'.format(len(tDataLps[sHeadingLps.LoopDeltaX])))
     
@@ -345,8 +363,8 @@ class sc_mshqtimestamp_excel_logic(object):
     cls.iSummaryRow+=15
     
     # Make the source file list
-    tHeadersSfl=[ 'Source','Line','Byte-Offset','Seq','ID','Comment', ]
-    oWorksheetSfl.write_row(ROWHDR, 0, tHeadersSfl, oBold)
+    tHeadersSfl=[ 'Source runtime context','Line','Byte-Offset','Seq','ID','Comment', ]
+    oWorksheetSfl.write_row(ROWHDR, 0, tHeadersSfl, oTitleSfl)
     for i,(key,value) in enumerate(tSourceDicts.iteritems()):
       oWorksheetSfl.write_row(i + ROWONE, 0, [ 
         key[0], 
@@ -358,7 +376,7 @@ class sc_mshqtimestamp_excel_logic(object):
         ], None)
 
     # Autofilter the source file list
-    oWorksheetSfl.autofilter(0, 0, len(tSourceDicts), len(tHeadersSfl) - 1)
+    oWorksheetSfl.autofilter(0, 0, len(tSourceDicts) - 1, len(tHeadersSfl) - 1)
     
     def SetColumnSfl_Width(iCol, iWidthIP):
       oWorksheetSfl.set_column(iCol,iCol, iWidthIP)
