@@ -36,12 +36,15 @@ class sc_mshqtimestamp_excel_logic(object):
     oNanoFormat.set_num_format('0.000000000')
 
     class sHeadingTms(object):
-      tHeadings = ('Line', 'Time', 'VarA', 'VarB', 'Comment', 'ProcUid', 'Proc', 'Delta', 'LoopStart', 'LoopDelta', 'LoopDeltaA', 'LoopDeltaB', )
+      tHeadings = ('Line', 'Time', 'VarA', 'VarB', 'VarC', 'VarD', 'VarE', 'Comment', 'ProcUid', 'Proc', 'Delta', 'LoopStart', 'LoopDelta', 'LoopDeltaA', 'LoopDeltaB', )
       LoopDeltaAB = [None,None]
       Line           , \
       Time           , \
       VarA           , \
       VarB           , \
+      VarC           , \
+      VarD           , \
+      VarE           , \
       Comment        , \
       ProcUid        , \
       Proc           , \
@@ -93,7 +96,7 @@ class sc_mshqtimestamp_excel_logic(object):
           fTime-=fFirstTime
           tRemainder=cRemainder.split('\x03')
           cProc,cProcseq=tRemainder[0:2]
-          cVarA,cVarB=tRemainder[5:7]
+          cVarA,cVarB,cVarC,cVarD,cVarE=tRemainder[5:10]
           tDataTms[sHeadingTms.Time].append(fTime)
           if not (cProc,cProcseq) in tProcUid.keys():
             tProcUid[(cProc,cProcseq)]=[iProcUid,iTotalLines-1,i]
@@ -117,6 +120,9 @@ class sc_mshqtimestamp_excel_logic(object):
           tDataTms[sHeadingTms.LoopDelta].append(None)
           tDataTms[sHeadingTms.VarA].append(cVarA)
           tDataTms[sHeadingTms.VarB].append(cVarB)
+          tDataTms[sHeadingTms.VarC].append(cVarC)
+          tDataTms[sHeadingTms.VarD].append(cVarD)
+          tDataTms[sHeadingTms.VarE].append(cVarE)
           cComment,cProcID='',''
           if not tSourceDicts.has_key((cProc,cProcseq,)):
             tEval=ast.literal_eval(tRemainder[-1]) if len(tRemainder[-1]) > 0 else None
@@ -186,8 +192,11 @@ class sc_mshqtimestamp_excel_logic(object):
     SetColumnTms_Width(sHeadingTms.Delta, 12)
     SetColumnTms_Width(sHeadingTms.LoopStart, 11)
     SetColumnTms_Width(sHeadingTms.LoopDelta, 12)
-    SetColumnTms_Width(sHeadingTms.VarA, 50)
-    SetColumnTms_Width(sHeadingTms.VarB, 50)
+    SetColumnTms_Width(sHeadingTms.VarA, 20)
+    SetColumnTms_Width(sHeadingTms.VarB, 20)
+    SetColumnTms_Width(sHeadingTms.VarC, 20)
+    SetColumnTms_Width(sHeadingTms.VarD, 20)
+    SetColumnTms_Width(sHeadingTms.VarE, 20)
     SetColumnTms_Width(sHeadingTms.Comment, 50)
     SetColumnTms_Width(sHeadingTms.LoopDeltaAB[0], 14)
     SetColumnTms_Width(sHeadingTms.LoopDeltaAB[1], 14)

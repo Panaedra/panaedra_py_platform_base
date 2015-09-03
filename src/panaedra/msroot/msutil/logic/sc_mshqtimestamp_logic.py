@@ -57,7 +57,7 @@ class sc_mshqtimestamp_logic(object):
             or len(tLineData[-1].rstrip()) > 0): # There is already data (a literal dict) present in this line; just copy line as-is
           f_out.write('{}{}\n'.format(cLine.rstrip(),cSourceLineComment))
         else:
-          cRuntimeloc,cLocSequence,cSourcecodeFile,iSourcecodeLine,cVarA,cVarB=tLineData[0],tLineData[1],tLineData[2],int(tLineData[3]),tLineData[5],tLineData[6]
+          cRuntimeloc,cLocSequence,cSourcecodeFile,iSourcecodeLine,cVarA,cVarB,cVarC,cVarD,cVarE=tLineData[0],tLineData[1],tLineData[2],int(tLineData[3]),tLineData[5],tLineData[6],tLineData[7],tLineData[8],tLineData[9]
           iSourcecodeLineTell=0
           if not tSourceComments.has_key(cSourcecodeFile):
             tSourceComments=self._ParseSourcecode(cSourcecodeFile, tSourceComments)
@@ -65,9 +65,9 @@ class sc_mshqtimestamp_logic(object):
             cSourceLineComment,iSourcecodeLineTell=tSourceComments[cSourcecodeFile][iSourcecodeLine]
           if (not bDedupeIP) or (not tDedupeData.has_key((cRuntimeloc,cLocSequence,))):
             tDedupeData[(cRuntimeloc,cLocSequence,)]=None
-            f_out.write('{}: {}\x03{}\x03{}\x03{}\x03{}\x03{}\x03{}\x03{}\n'.format(tLine[0],cRuntimeloc,cLocSequence,cSourcecodeFile,iSourcecodeLine,iSourcecodeLineTell,cVarA,cVarB,cSourceLineComment))
+            f_out.write('{}: {}\x03{}\x03{}\x03{}\x03{}\x03{}\x03{}\x03{}\x03{}\x03{}\x03{}\n'.format(tLine[0],cRuntimeloc,cLocSequence,cSourcecodeFile,iSourcecodeLine,iSourcecodeLineTell,cVarA,cVarB,cVarC,cVarD,cVarE,cSourceLineComment))
           else:
-            f_out.write('{}: {}\x03{}\x03\x03\x03\x03{}\x03{}\x03\n'.format(tLine[0],cRuntimeloc,cLocSequence,cVarA,cVarB))
+            f_out.write('{}: {}\x03{}\x03\x03\x03\x03{}\x03{}\x03{}\x03{}\x03{}\x03\n'.format(tLine[0],cRuntimeloc,cLocSequence,cVarA,cVarB,cVarC,cVarD,cVarE))
     
     if bReplaceFileIP:
       tHqtTmpFile=os.path.splitext(cHqtFileIP)
