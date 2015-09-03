@@ -96,7 +96,7 @@ class sc_mshqtimestamp_excel_logic(object):
           cVarA,cVarB=tRemainder[5:7]
           tDataTms[sHeadingTms.Time].append(fTime)
           if not (cProc,cProcseq) in tProcUid.keys():
-            tProcUid[(cProc,cProcseq)]=[iProcUid,i,fTime]
+            tProcUid[(cProc,cProcseq)]=[iProcUid,iTotalLines-1,i]
             iProcUid+=1
           else:
             if iLoopProcUid is None:
@@ -363,16 +363,20 @@ class sc_mshqtimestamp_excel_logic(object):
     cls.iSummaryRow+=15
     
     # Make the source file list
-    tHeadersSfl=[ 'Source runtime context','Line','Byte-Offset','Seq','ID','Comment', ]
+    tHeadersSfl=[ 'Runtime context', 'Source', 'Source-Line','Byte-Offset','Seq','ID','Comment','Uid','Timestamp-Row','Timestamp-Line' ]
     oWorksheetSfl.write_row(ROWHDR, 0, tHeadersSfl, oTitleSfl)
     for i,(key,value) in enumerate(tSourceDicts.iteritems()):
-      oWorksheetSfl.write_row(i + ROWONE, 0, [ 
+      oWorksheetSfl.write_row(i + ROWONE, 0, [
         key[0], 
+        value.get('fullpath',None)    if not value is None else None, 
         value.get('line',None)        if not value is None else None, 
         value.get('byte-offset',None) if not value is None else None, 
         key[1], 
         value.get('id',None)          if not value is None else None, 
         value.get('comment',None)     if not value is None else None,
+        tProcUid[(key[0],key[1])][0],     # Uid
+        tProcUid[(key[0],key[1])][1] + 2, # Row in timestamp sheet. 0-based: +1. Title row: +1. 
+        tProcUid[(key[0],key[1])][2] + 1, # Line nr in timestamp file. 0-based: +1. 
         ], None)
 
     # Autofilter the source file list
@@ -382,16 +386,20 @@ class sc_mshqtimestamp_excel_logic(object):
       oWorksheetSfl.set_column(iCol,iCol, iWidthIP)
     
     SetColumnSfl_Width(0,100)
-    SetColumnSfl_Width(1,9)
-    SetColumnSfl_Width(2,13)
-    SetColumnSfl_Width(3,9)
-    SetColumnSfl_Width(4,12)
-    SetColumnSfl_Width(5,50)
+    SetColumnSfl_Width(1,80)
+    SetColumnSfl_Width(2,15)
+    SetColumnSfl_Width(3,13)
+    SetColumnSfl_Width(4,9)
+    SetColumnSfl_Width(5,12)
+    SetColumnSfl_Width(6,50)
+    SetColumnSfl_Width(7,13)
+    SetColumnSfl_Width(8,18)
+    SetColumnSfl_Width(9,18)
     
     # Freeze the first row and first col.
     oWorksheetTms.freeze_panes(1, 1)
     oWorksheetLps.freeze_panes(1, 1)
-    oWorksheetSfl.freeze_panes(1, 2)
+    oWorksheetSfl.freeze_panes(1, 1)
     
     # Close and save the excel workbook file
     oWorkbook.close()
