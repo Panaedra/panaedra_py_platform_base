@@ -26,7 +26,7 @@ class sc_mshqtimestamp_excel_logic(object):
     oTitleLps = oWorkbook.add_format({'bold': 1, 'bg_color': '#99F188'})
     oWorksheetWat = oWorkbook.add_worksheet('Watches')
     oWorksheetWat.set_tab_color('#F1E122')
-    oTitleWat = oWorkbook.add_format({'bold': 1, 'bg_color': '#F1E122'}) # @UnusedVariable
+    oTitleWat = oWorkbook.add_format({'bold': 1, 'bg_color': '#F1E122'})
     oWorksheetSfl = oWorkbook.add_worksheet('Sourcefiles')
     oWorksheetSfl.set_tab_color('#BB77EE')
     oTitleSfl = oWorkbook.add_format({'bold': 1, 'bg_color': '#EDBADE'})
@@ -71,12 +71,15 @@ class sc_mshqtimestamp_excel_logic(object):
       
     fFirstTime=None
     iLoopProcUid=None
-    tProcUid={}
+    tProcUid=OrderedDict()
+    tRevProcUid=OrderedDict()
     iProcUid=1
     iTotalLines=0
     tSourceDicts=OrderedDict()
     tAdditionalInfo=OrderedDict()
     cPropath=''
+    tWatches=OrderedDict()
+    tWatchLabels=OrderedDict()
     
     # Collect all data into tDataTms
     with open(cFileIP) as f:
@@ -102,8 +105,9 @@ class sc_mshqtimestamp_excel_logic(object):
           cProc,cProcseq=tRemainder[0:2]
           cVarA,cVarB,cVarC,cVarD,cVarE=tRemainder[5:10]
           tDataTms[sHeadingTms.Time].append(fTime)
-          if not (cProc,cProcseq) in tProcUid.keys():
-            tProcUid[(cProc,cProcseq)]=[iProcUid,iTotalLines-1,i]
+          if not (cProc,cProcseq,) in tProcUid.keys():
+            tProcUid[(cProc,cProcseq,)]=[iProcUid,iTotalLines-1,i]
+            tRevProcUid[iProcUid]=(cProc,cProcseq,)
             iProcUid+=1
           else:
             if iLoopProcUid is None:
@@ -133,6 +137,11 @@ class sc_mshqtimestamp_excel_logic(object):
             tSourceDicts[(cProc,cProcseq,)]=tEval
             if not tEval is None and tEval.has_key('summary'):
               cls.AddToSummary(oWorksheetSmy, oFixedfont, tEval['summary'])
+            if not tEval is None and tEval.has_key('watch-labels'):
+              for cWatch in tEval['watch-labels']:
+                if not tWatches.has_key(cWatch):
+                  tWatches[cWatch]=(cProc,cProcseq,)
+              tWatchLabels[(cProc,cProcseq,)]=tEval['watch-labels']
             if tEval is None:
               tSourceDicts[(cProc,cProcseq,)]={}
             tSourceDicts[(cProc,cProcseq,)]['fullpath']    = tRemainder[2]
@@ -174,6 +183,20 @@ class sc_mshqtimestamp_excel_logic(object):
         fTimePrev=tDataTms[sHeadingTms.Time][i]
         iPrev=i
     
+    # Fill the watch values
+    for i in range(iTotalLines):
+      cProc,cProcseq=tRevProcUid[tDataTms[sHeadingTms.ProcUid][i]]
+      cVarA=tDataTms[sHeadingTms.VarA][i]
+      cVarB=tDataTms[sHeadingTms.VarB][i]
+      cVarC=tDataTms[sHeadingTms.VarC][i]
+      cVarD=tDataTms[sHeadingTms.VarD][i]
+      cVarE=tDataTms[sHeadingTms.VarE][i]
+      if tWatchLabels.has_key((cProc,cProcseq,)):
+        if len(cVarA) > 0:
+          print 'TODO cVarA', cVarA, cProc,cProcseq
+          #,repr(cVarA)
+          #,cVarB,cVarC,cVarD,cVarE
+
     oWorksheetSmy.set_column(0, 0, 180)  # Column width (of summary)
     cls.AddToSummary(oWorksheetSmy, oFixedfont, 'Delta total: {} seconds'.format(fTime))
     
@@ -375,6 +398,16 @@ class sc_mshqtimestamp_excel_logic(object):
     oWorksheetSmy.insert_chart(cls.iSummaryRow + 1, 0, oChartSlowAndFastest)
     cls.iSummaryRow+=15
     
+    # Make the watches list
+    
+    oWorksheetWat.write_string(0, 0, 'Time', oTitleWat)
+    for i,(key,value) in enumerate(tWatches.iteritems()):
+      oWorksheetWat.write_string(0, i+1, key, oTitleWat)
+      oWorksheetWat.set_column(i+1, i+1, 20) # Set width
+      
+    # Autofilter the watches list
+    oWorksheetWat.autofilter(0, 0, 1, len(tWatches))
+    
     # Make the source file list
     tHeadersSfl=[ 'Runtime context', 'Source', 'Source-Line','Byte-Offset','Seq','ID','Comment','Uid','Timestamp-Row','Timestamp-Line' ]
     oWorksheetSfl.write_row(ROWHDR, 0, tHeadersSfl, oTitleSfl)
@@ -430,6 +463,7 @@ class sc_mshqtimestamp_excel_logic(object):
     # Freeze the first row and first col.
     oWorksheetTms.freeze_panes(1, 1)
     oWorksheetLps.freeze_panes(1, 1)
+    oWorksheetWat.freeze_panes(1, 1)
     oWorksheetSfl.freeze_panes(1, 1)
     
     # Close and save the excel workbook file
