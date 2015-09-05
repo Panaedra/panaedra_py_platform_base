@@ -379,14 +379,19 @@ class sc_mshqtimestamp_excel_logic(object):
     tHeadersSfl=[ 'Runtime context', 'Source', 'Source-Line','Byte-Offset','Seq','ID','Comment','Uid','Timestamp-Row','Timestamp-Line' ]
     oWorksheetSfl.write_row(ROWHDR, 0, tHeadersSfl, oTitleSfl)
     for i,(key,value) in enumerate(tSourceDicts.iteritems()):
+      bRelPath=False
       cRelOrFullPath=value.get('fullpath',None) if not value is None else None
       if len(cPropath) > 0 and not cRelOrFullPath is None and len(cRelOrFullPath) > 0:
-        cRelOrFullPath=sc_path.Full2PartialPath(cRelOrFullPath, cPropath, ',')
+        cRelPath=sc_path.Full2PartialPath(cRelOrFullPath, cPropath, ',')
+        bRelPath=len(cRelPath)!=len(cRelOrFullPath)
+        cRelOrFullPath=cRelPath
+      iSourceLine=int(value.get('line',None)) if not value is None else None
+      iSourceOffset=int(value.get('byte-offset',None)) if not value is None else None
       oWorksheetSfl.write_row(i + ROWONE, 0, [
-        key[0], 
+        key[0],
         cRelOrFullPath, 
-        value.get('line',None)        if not value is None else None, 
-        value.get('byte-offset',None) if not value is None else None, 
+        iSourceLine, 
+        iSourceOffset, 
         key[1], 
         value.get('id',None)          if not value is None else None, 
         value.get('comment',None)     if not value is None else None,
@@ -394,6 +399,16 @@ class sc_mshqtimestamp_excel_logic(object):
         tProcUid[(key[0],key[1])][1] + 2, # Row in timestamp sheet. 0-based: +1. Title row: +1. 
         tProcUid[(key[0],key[1])][2] + 1, # Line nr in timestamp file. 0-based: +1. 
         ], None)
+      
+      if bRelPath:
+        oWorksheetSfl.write_url(i + ROWONE, 1, 
+          'eclipse:///openfile?workspace=PanaedraEclipse&editor=default&window=1' + 
+          '&line=' + str(iSourceLine) + 
+          '&offset=' + str(iSourceOffset) + 
+          '&project=amdir_gui' +
+          '&path=src/' + cRelOrFullPath,
+          None,
+          cRelOrFullPath)
 
     # Autofilter the source file list
     oWorksheetSfl.autofilter(0, 0, len(tSourceDicts) - 1, len(tHeadersSfl) - 1)
@@ -402,7 +417,7 @@ class sc_mshqtimestamp_excel_logic(object):
       oWorksheetSfl.set_column(iCol,iCol, iWidthIP)
     
     SetColumnSfl_Width(0,100)
-    SetColumnSfl_Width(1,80)
+    SetColumnSfl_Width(1,70)
     SetColumnSfl_Width(2,15)
     SetColumnSfl_Width(3,13)
     SetColumnSfl_Width(4,9)
