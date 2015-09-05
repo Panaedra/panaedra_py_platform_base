@@ -24,5 +24,19 @@ class sc_path(object):
     cls.cDataRecoveryDir = tData['cDataRecoveryDir'  ]
     cls.cOtaPath         = tData['cOtaPath'          ]
     cls.cWorkPath        = tData['cWorkPath'         ]
+  
+  @classmethod
+  def Full2PartialPath(cls,cFullPath,cPath,cDelimiter):
+    tPath=cPath.split(cDelimiter)
+    for cEntry in tPath:
+      if cFullPath.startswith(cEntry):
+        return cFullPath[len(cEntry):].lstrip('/\\')
+    return cFullPath
 
+if __name__ == '__main__':
+  '''
+  cls=sc_path
+  print cls.Full2PartialPath('/root/test/namespace/one.cls', '/root/dummy,/root/test,/root/devshelve', ',')
+  '''
+  
 #EOF'

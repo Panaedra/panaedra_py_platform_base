@@ -2,6 +2,7 @@ import xlsxwriter
 import os
 import ast
 from collections import OrderedDict
+from panaedra.msroot.msutil.logic.sc_path import sc_path
 
 ROWHDR=0
 ROWONE=1
@@ -75,6 +76,7 @@ class sc_mshqtimestamp_excel_logic(object):
     iTotalLines=0
     tSourceDicts=OrderedDict()
     tAdditionalInfo=OrderedDict()
+    cPropath=''
     
     # Collect all data into tDataTms
     with open(cFileIP) as f:
@@ -85,6 +87,8 @@ class sc_mshqtimestamp_excel_logic(object):
             tAddEval=ast.literal_eval(cEval)
             if tAddEval.has_key('summary'):
               cls.AddToSummary(oWorksheetSmy, oFixedfont, tAddEval['summary'])
+            if tAddEval.has_key('propath'):
+              cPropath=tAddEval['propath']
             tAdditionalInfo[i] = tAddEval
         else:
           iTotalLines+=1
@@ -375,9 +379,12 @@ class sc_mshqtimestamp_excel_logic(object):
     tHeadersSfl=[ 'Runtime context', 'Source', 'Source-Line','Byte-Offset','Seq','ID','Comment','Uid','Timestamp-Row','Timestamp-Line' ]
     oWorksheetSfl.write_row(ROWHDR, 0, tHeadersSfl, oTitleSfl)
     for i,(key,value) in enumerate(tSourceDicts.iteritems()):
+      cRelOrFullPath=value.get('fullpath',None) if not value is None else None
+      if len(cPropath) > 0 and not cRelOrFullPath is None and len(cRelOrFullPath) > 0:
+        cRelOrFullPath=sc_path.Full2PartialPath(cRelOrFullPath, cPropath, ',')
       oWorksheetSfl.write_row(i + ROWONE, 0, [
         key[0], 
-        value.get('fullpath',None)    if not value is None else None, 
+        cRelOrFullPath, 
         value.get('line',None)        if not value is None else None, 
         value.get('byte-offset',None) if not value is None else None, 
         key[1], 
