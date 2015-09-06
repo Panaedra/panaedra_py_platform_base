@@ -36,6 +36,7 @@ class sc_mshqtimestamp_excel_logic(object):
     oFixedfont.set_font_size(10)
     oNanoFormat = oWorkbook.add_format()
     oNanoFormat.set_num_format('0.000000000')
+    aWatchColor=lambda i:'#88{:0>2X}{:0>2X}'.format(int(120 - (i * 33.8)) % 256 , int(120 - (i * 12.8)) % 256 )
 
     class sHeadingTms(object):
       tHeadings = ('Line', 'Time', 'VarA', 'VarB', 'VarC', 'VarD', 'VarE', 'Comment', 'ProcUid', 'Proc', 'Delta', 'LoopStart', 'LoopDelta', 'LoopDeltaA', 'LoopDeltaB', )
@@ -324,8 +325,8 @@ class sc_mshqtimestamp_excel_logic(object):
           'name'       :  cWatch,
           'categories' :  ['Watches', ROWONE, 0, iTotalLines, 0],
           'values'     :  ['Watches', ROWONE, i + 2, iTotalLines, i + 2],
-          'line'       :  {'color': '#88{:0>2X}{:0>2X}'.format(int(120 - (i * 33.8)) % 256 , int(120 - (i * 12.8)) % 256 ) },
-          'fill'       :  {'color': '#88{:0>2X}{:0>2X}'.format(int(120 - (i * 35.8)) % 256 , int(120 - (i * 12.8)) % 256 ) },
+          'line'       :  {'color': aWatchColor(i) },
+          'fill'       :  {'color': aWatchColor(i) },
           'gap'        :  0,
         }
       )
@@ -372,8 +373,8 @@ class sc_mshqtimestamp_excel_logic(object):
         'name'       :  'slowest',
         'categories' :  ['Timestamps', tLoop[iLoopFirstDeltaMax - 1][0] + ROWONE, sHeadingTms.Proc, tLoop[iLoopFirstDeltaMax - 1][1] + ROWONE, sHeadingTms.Proc],
         'values'     :  ['Timestamps', tLoop[iLoopFirstDeltaMax - 1][0] + ROWONE, sHeadingTms.Time, tLoop[iLoopFirstDeltaMax - 1][1] + ROWONE, sHeadingTms.Time],
-        'line'       :  {'color': 'silver'},
-        'fill'       :  {'color': '#DD4433'},
+        'line'       :  {'color': 'silver'  },
+        'fill'       :  {'color': '#DD4433' },
         'gap'        :  0,
       }
     )
@@ -392,8 +393,8 @@ class sc_mshqtimestamp_excel_logic(object):
           'name'       :  cWatch,
           'categories' :  ['Timestamps', tLoop[iLoopFirstDeltaMax - 1][0] + ROWONE, sHeadingTms.Proc, tLoop[iLoopFirstDeltaMax - 1][1] + ROWONE, sHeadingTms.Proc],
           'values'     :  ['Watches', tLoop[iLoopFirstDeltaMax - 1][0] + ROWONE, i+2, tLoop[iLoopFirstDeltaMax - 1][1] + ROWONE, i+2],
-          'line'       :  {'color': '#88{:0>2X}{:0>2X}'.format(int(120 - (i * 33.8)) % 256 , int(120 - (i * 12.8)) % 256 ) },
-          'fill'       :  {'color': '#88{:0>2X}{:0>2X}'.format(int(120 - (i * 35.8)) % 256 , int(120 - (i * 12.8)) % 256 ) },
+          'line'       :  {'color': aWatchColor(i) },
+          'fill'       :  {'color': aWatchColor(i) },
           'gap'        :  0,
         }
       )
@@ -442,8 +443,8 @@ class sc_mshqtimestamp_excel_logic(object):
           'name'       :  cWatch,
           'categories' :  ['Timestamps', tLoop[iLoopFirstDeltaMin - 1][0] + ROWONE, sHeadingTms.Proc, tLoop[iLoopFirstDeltaMin - 1][1] + ROWONE, sHeadingTms.Proc],
           'values'     :  ['Watches', tLoop[iLoopFirstDeltaMin - 1][0] + ROWONE, i+2, tLoop[iLoopFirstDeltaMin - 1][1] + ROWONE, i+2],
-          'line'       :  {'color': '#88{:0>2X}{:0>2X}'.format(int(120 - (i * 33.8)) % 256 , int(120 - (i * 12.8)) % 256 ) },
-          'fill'       :  {'color': '#88{:0>2X}{:0>2X}'.format(int(120 - (i * 35.8)) % 256 , int(120 - (i * 12.8)) % 256 ) },
+          'line'       :  {'color': aWatchColor(i) },
+          'fill'       :  {'color': aWatchColor(i) },
           'gap'        :  0,
         }
       )
