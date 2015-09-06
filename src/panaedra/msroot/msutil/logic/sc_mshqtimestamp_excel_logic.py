@@ -9,7 +9,7 @@ ROWONE=1
 
 class sc_mshqtimestamp_excel_logic(object):
   
-  iSummaryRow=-1
+  iSummaryRow=0
   
   @classmethod
   def TimestampFileToExcel(cls, cFileIP):
@@ -18,6 +18,7 @@ class sc_mshqtimestamp_excel_logic(object):
     oWorkbook = xlsxwriter.Workbook(os.path.join(cFilepath, '{}.xlsx'.format(cFilebase)))
     oWorksheetSmy = oWorkbook.add_worksheet('Summary')
     oWorksheetSmy.set_tab_color('#8888FF')
+    oTitleSmy = oWorkbook.add_format({'bold': 1, 'bg_color': '#DDBBF2'})
     oWorksheetTms = oWorkbook.add_worksheet('Timestamps')
     oWorksheetTms.set_tab_color('#11FF22')
     oTitleTms = oWorkbook.add_format({'bold': 1, 'bg_color': '#99FF77'})
@@ -182,7 +183,16 @@ class sc_mshqtimestamp_excel_logic(object):
           tDataTms[sHeadingTms.LoopDeltaAB[(iLoop + 1) % 2]][i]=fLoopDelta
         fTimePrev=tDataTms[sHeadingTms.Time][i]
         iPrev=i
-    
+
+    # Make the watches list
+    oWorksheetWat.write_string(0, 0, 'Line', oTitleWat)
+    oWorksheetWat.set_column(0, 0, 10) # Set width
+    oWorksheetWat.write_string(0, 1, 'Time', oTitleWat)
+    oWorksheetWat.set_column(1, 1, 12) # Set width
+    for i,(key,value) in enumerate(tWatches.iteritems()):
+      oWorksheetWat.write_string(0, i+2, key, oTitleWat)
+      oWorksheetWat.set_column(i+2, i+2, 20) # Set width
+      
     # Fill the watch values
     for i in range(iTotalLines):
       cProc,cProcseq=tRevProcUid[tDataTms[sHeadingTms.ProcUid][i]]
@@ -191,12 +201,42 @@ class sc_mshqtimestamp_excel_logic(object):
       cVarC=tDataTms[sHeadingTms.VarC][i]
       cVarD=tDataTms[sHeadingTms.VarD][i]
       cVarE=tDataTms[sHeadingTms.VarE][i]
+      tWatchValues=list(None for dummy in tWatches.keys())
       if tWatchLabels.has_key((cProc,cProcseq,)):
-        if len(cVarA) > 0:
-          print 'TODO cVarA', cVarA, cProc,cProcseq
-          #,repr(cVarA)
-          #,cVarB,cVarC,cVarD,cVarE
+        tWatchIDs=tWatchLabels[(cProc,cProcseq,)]
+        if len(cVarA) > 0 and len(tWatchIDs) > 0 and not tWatchIDs[0] is None:
+          try:
+            tWatchValues[0] = int(cVarA)
+          except:
+            tWatchValues[0] = None
+        if len(cVarB) > 0 and len(tWatchIDs) > 1 and not tWatchIDs[1] is None:
+          try:
+            tWatchValues[1] = int(cVarB)
+          except:
+            tWatchValues[1] = None
+        if len(cVarC) > 0 and len(tWatchIDs) > 2 and not tWatchIDs[2] is None:
+          try:
+            tWatchValues[2] = int(cVarC)
+          except:
+            tWatchValues[2] = None
+        if len(cVarD) > 0 and len(tWatchIDs) > 3 and not tWatchIDs[3] is None:
+          try:
+            tWatchValues[3] = int(cVarD)
+          except:
+            tWatchValues[3] = None
+        if len(cVarE) > 0 and len(tWatchIDs) > 4 and not tWatchIDs[4] is None:
+          try:
+            tWatchValues[4] = int(cVarE)
+          except:
+            tWatchValues[4] = None
+      oWorksheetWat.write_number(i+1, 0, tDataTms[sHeadingTms.Line][i])
+      oWorksheetWat.write_number(i+1, 1, tDataTms[sHeadingTms.Time][i], oNanoFormat)
+      oWorksheetWat.write_row(i+1, 2, tWatchValues)
 
+    # Autofilter the watches list
+    oWorksheetWat.autofilter(0, 0, iTotalLines, len(tWatches))
+    
+    # Summary sheet
     oWorksheetSmy.set_column(0, 0, 180)  # Column width (of summary)
     cls.AddToSummary(oWorksheetSmy, oFixedfont, 'Delta total: {} seconds'.format(fTime))
     
@@ -275,8 +315,30 @@ class sc_mshqtimestamp_excel_logic(object):
       }
     )
     
+    # Create graphs for the watches, next to the 'all loops' chart
+    for i,cWatch in enumerate(tWatches.keys()):
+      oWorksheetSmy.write_string(0, i+1, cWatch, oTitleSmy)
+      oChartWatAll = oWorkbook.add_chart({'type': 'bar'})
+      oChartWatAll.add_series(
+        {
+          'name'       :  cWatch,
+          'categories' :  ['Watches', ROWONE, 0, iTotalLines, 0],
+          'values'     :  ['Watches', ROWONE, i + 2, iTotalLines, i + 2],
+          'line'       :  {'color': '#88{:0>2X}{:0>2X}'.format(int(120 - (i * 33.8)) % 256 , int(120 - (i * 12.8)) % 256 ) },
+          'fill'       :  {'color': '#88{:0>2X}{:0>2X}'.format(int(120 - (i * 35.8)) % 256 , int(120 - (i * 12.8)) % 256 ) },
+          'gap'        :  0,
+        }
+      )
+      oChartWatAll.set_legend({'none': True})    
+      oChartWatAll.set_size({'width': 1265, 'height': 600})
+      oChartWatAll.set_y_axis({'reverse': True})
+      oChartWatAll.set_title({'none': True})
+      oChartWatAll.set_x_axis({'num_format': '@'}) # Overrule the format of the referred cell; just use text format because the extra precision is clutter in the X axis    
+      oWorksheetSmy.insert_chart(cls.iSummaryRow + 2, i+1, oChartWatAll)
+      oWorksheetSmy.set_column(i+1, i+1, 180)  # Column width (of watch column)
+    
     oChartAll.set_legend({'none': True})    
-    oChartAll.set_size({'width': 1266, 'height': 600})
+    oChartAll.set_size({'width': 1265, 'height': 600})
     oChartAll.set_y_axis({'reverse': True})
     oChartAll.set_title({'none': True})
     oChartAll.set_x_axis({'num_format': '@'}) # Overrule the format of the referred cell; just use text format because the extra precision is clutter in the X axis    
@@ -315,13 +377,33 @@ class sc_mshqtimestamp_excel_logic(object):
         'gap'        :  0,
       }
     )
-    
+
     oChartSlowest.set_legend({'none': True})    
-    oChartSlowest.set_size({'width': 1266, 'height': 300})
+    oChartSlowest.set_size({'width': 1265, 'height': 300})
     oChartSlowest.set_y_axis({'reverse': True})
     oChartSlowest.set_title({'none': True})
     oChartSlowest.set_x_axis({'num_format': '@'}) # Overrule the format of the referred cell; just use text format because the extra precision is clutter in the X axis
 
+    # Create graphs for the watches, next to the 'slowest' chart
+    for i,cWatch in enumerate(tWatches.keys()):
+      oChartWatSlowest = oWorkbook.add_chart({'type': 'bar'})
+      oChartWatSlowest.add_series(
+        {
+          'name'       :  cWatch,
+          'categories' :  ['Timestamps', tLoop[iLoopFirstDeltaMax - 1][0] + ROWONE, sHeadingTms.Proc, tLoop[iLoopFirstDeltaMax - 1][1] + ROWONE, sHeadingTms.Proc],
+          'values'     :  ['Watches', tLoop[iLoopFirstDeltaMax - 1][0] + ROWONE, i+2, tLoop[iLoopFirstDeltaMax - 1][1] + ROWONE, i+2],
+          'line'       :  {'color': '#88{:0>2X}{:0>2X}'.format(int(120 - (i * 33.8)) % 256 , int(120 - (i * 12.8)) % 256 ) },
+          'fill'       :  {'color': '#88{:0>2X}{:0>2X}'.format(int(120 - (i * 35.8)) % 256 , int(120 - (i * 12.8)) % 256 ) },
+          'gap'        :  0,
+        }
+      )
+      oChartWatSlowest.set_legend({'none': True})
+      oChartWatSlowest.set_size({'width': 1265, 'height': 300})
+      oChartWatSlowest.set_y_axis({'reverse': True})
+      oChartWatSlowest.set_title({'none': True})
+      oChartWatSlowest.set_x_axis({'num_format': '@'}) # Overrule the format of the referred cell; just use text format because the extra precision is clutter in the X axis    
+      oWorksheetSmy.insert_chart(cls.iSummaryRow + 2, i+1, oChartWatSlowest)
+    
     cls.AddToSummary(oWorksheetSmy, oFixedfont, 'Chart: Slowest loop ({}), zoomed in, line {} to {}'.format(
       iLoopFirstDeltaMax,
       tDataTms[sHeadingTms.Line][tLoop[iLoopFirstDeltaMax - 1][0]], 
@@ -347,10 +429,30 @@ class sc_mshqtimestamp_excel_logic(object):
     )
     
     oChartFastest.set_legend({'none': True})    
-    oChartFastest.set_size({'width': 1266, 'height': 300})
+    oChartFastest.set_size({'width': 1265, 'height': 300})
     oChartFastest.set_y_axis({'reverse': True})
     oChartFastest.set_title({'none': True})
     oChartFastest.set_x_axis({'num_format': '@'}) # Overrule the format of the referred cell; just use text format because the extra precision is clutter in the X axis    
+    
+    # Create graphs for the watches, next to the 'fastest' chart
+    for i,cWatch in enumerate(tWatches.keys()):
+      oChartWatFastest = oWorkbook.add_chart({'type': 'bar'})
+      oChartWatFastest.add_series(
+        {
+          'name'       :  cWatch,
+          'categories' :  ['Timestamps', tLoop[iLoopFirstDeltaMin - 1][0] + ROWONE, sHeadingTms.Proc, tLoop[iLoopFirstDeltaMin - 1][1] + ROWONE, sHeadingTms.Proc],
+          'values'     :  ['Watches', tLoop[iLoopFirstDeltaMin - 1][0] + ROWONE, i+2, tLoop[iLoopFirstDeltaMin - 1][1] + ROWONE, i+2],
+          'line'       :  {'color': '#88{:0>2X}{:0>2X}'.format(int(120 - (i * 33.8)) % 256 , int(120 - (i * 12.8)) % 256 ) },
+          'fill'       :  {'color': '#88{:0>2X}{:0>2X}'.format(int(120 - (i * 35.8)) % 256 , int(120 - (i * 12.8)) % 256 ) },
+          'gap'        :  0,
+        }
+      )
+      oChartWatFastest.set_legend({'none': True})
+      oChartWatFastest.set_size({'width': 1265, 'height': 300})
+      oChartWatFastest.set_y_axis({'reverse': True})
+      oChartWatFastest.set_title({'none': True})
+      oChartWatFastest.set_x_axis({'num_format': '@'}) # Overrule the format of the referred cell; just use text format because the extra precision is clutter in the X axis    
+      oWorksheetSmy.insert_chart(cls.iSummaryRow + 2, i+1, oChartWatFastest)
     
     cls.AddToSummary(oWorksheetSmy, oFixedfont, 'Chart: Fastest loop ({}), zoomed in, line {} to {}'.format(
       iLoopFirstDeltaMin,
@@ -387,7 +489,7 @@ class sc_mshqtimestamp_excel_logic(object):
     )
     
     oChartSlowAndFastest.set_legend({'none': True})
-    oChartSlowAndFastest.set_size({'width': 1266, 'height': 300})
+    oChartSlowAndFastest.set_size({'width': 1265, 'height': 300})
     oChartSlowAndFastest.set_y_axis({'reverse': True})
     oChartSlowAndFastest.set_title({'none': True})
     oChartSlowAndFastest.set_x_axis({'num_format': '@'}) # Overrule the format of the referred cell; just use text format because the extra precision is clutter in the X axis    
@@ -397,16 +499,6 @@ class sc_mshqtimestamp_excel_logic(object):
     # Insert the chart into the worksheet.
     oWorksheetSmy.insert_chart(cls.iSummaryRow + 1, 0, oChartSlowAndFastest)
     cls.iSummaryRow+=15
-    
-    # Make the watches list
-    
-    oWorksheetWat.write_string(0, 0, 'Time', oTitleWat)
-    for i,(key,value) in enumerate(tWatches.iteritems()):
-      oWorksheetWat.write_string(0, i+1, key, oTitleWat)
-      oWorksheetWat.set_column(i+1, i+1, 20) # Set width
-      
-    # Autofilter the watches list
-    oWorksheetWat.autofilter(0, 0, 1, len(tWatches))
     
     # Make the source file list
     tHeadersSfl=[ 'Runtime context', 'Source', 'Source-Line','Byte-Offset','Seq','ID','Comment','Uid','Timestamp-Row','Timestamp-Line' ]
@@ -460,6 +552,8 @@ class sc_mshqtimestamp_excel_logic(object):
     SetColumnSfl_Width(8,18)
     SetColumnSfl_Width(9,18)
     
+    # Freeze the first row.
+    oWorksheetSmy.freeze_panes(1, 0)
     # Freeze the first row and first col.
     oWorksheetTms.freeze_panes(1, 1)
     oWorksheetLps.freeze_panes(1, 1)
@@ -477,5 +571,6 @@ class sc_mshqtimestamp_excel_logic(object):
   
 if __name__ == '__main__':
   sc_mshqtimestamp_excel_logic.TimestampFileToExcel(r'T:\ota\systeemtst\dataexchange\fluxdumpbig__dwan_idetest.txt')
+  print 'Done'
 
 #EOF
