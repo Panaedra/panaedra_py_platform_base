@@ -1,6 +1,9 @@
-import xlsxwriter
-import os
 import ast
+import os
+import sys
+import traceback
+import xlsxwriter
+
 from collections import OrderedDict
 from panaedra.msroot.msutil.logic.sc_path import sc_path
 
@@ -89,12 +92,17 @@ class sc_mshqtimestamp_excel_logic(object):
         if cLine.startswith('Hqts_Additional_Info:'):
           cEval=cLine.rstrip().partition(':')[2].lstrip()
           if cEval.startswith('{'):
-            tAddEval=ast.literal_eval(cEval)
-            if tAddEval.has_key('summary'):
-              cls.AddToSummary(oWorksheetSmy, oFixedfont, tAddEval['summary'])
-            if tAddEval.has_key('propath'):
-              cPropath=tAddEval['propath']
-            tAdditionalInfo[i] = tAddEval
+            try:
+              tAddEval=ast.literal_eval(cEval)
+              if tAddEval.has_key('summary'):
+                cls.AddToSummary(oWorksheetSmy, oFixedfont, tAddEval['summary'])
+              if tAddEval.has_key('propath'):
+                cPropath=tAddEval['propath']
+              tAdditionalInfo[i] = tAddEval
+            except SyntaxError:
+              sys.stderr.write(traceback.format_exc())
+              sys.stderr.write('\n')
+              sys.stderr.flush()
         else:
           iTotalLines+=1
           tDataTms[sHeadingTms.Line].append(i+1)
