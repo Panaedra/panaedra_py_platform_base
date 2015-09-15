@@ -96,8 +96,8 @@ class sc_mshqtimestamp_excel_logic(object):
               tAddEval=ast.literal_eval(cEval)
               if tAddEval.has_key('summary'):
                 cls.AddToSummary(oWorksheetSmy, oFixedfont, tAddEval['summary'])
-              if tAddEval.has_key('propath'):
-                cPropath=tAddEval['propath']
+              if tAddEval.has_key('OePropath'):
+                cPropath=tAddEval['OePropath']
               tAdditionalInfo[i] = tAddEval
             except SyntaxError:
               sys.stderr.write(traceback.format_exc())
