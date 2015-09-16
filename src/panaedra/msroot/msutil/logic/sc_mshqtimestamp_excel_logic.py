@@ -2,6 +2,7 @@ import ast
 import os
 import sys
 import traceback
+import urllib
 import xlsxwriter
 
 from collections import OrderedDict
@@ -16,24 +17,52 @@ class sc_mshqtimestamp_excel_logic(object):
   
   @classmethod
   def TimestampFileToExcel(cls, cFileIP):
+    
     cFilepath,cFilename = os.path.split(cFileIP)
     cFilebase,dummy=os.path.splitext(cFilename)
+    
     oWorkbook = xlsxwriter.Workbook(os.path.join(cFilepath, '{}.xlsx'.format(cFilebase)))
+    
     oWorksheetSmy = oWorkbook.add_worksheet('Summary')
     oWorksheetSmy.set_tab_color('#8888FF')
     oTitleSmy = oWorkbook.add_format({'bold': 1, 'bg_color': '#DDBBF2'})
+    
     oWorksheetTms = oWorkbook.add_worksheet('Timestamps')
     oWorksheetTms.set_tab_color('#11FF22')
     oTitleTms = oWorkbook.add_format({'bold': 1, 'bg_color': '#99FF77'})
+    
     oWorksheetLps = oWorkbook.add_worksheet('Loops')
     oWorksheetLps.set_tab_color('#11F182')
     oTitleLps = oWorkbook.add_format({'bold': 1, 'bg_color': '#99F188'})
+    
     oWorksheetWat = oWorkbook.add_worksheet('Watches')
     oWorksheetWat.set_tab_color('#F1E122')
     oTitleWat = oWorkbook.add_format({'bold': 1, 'bg_color': '#F1E122'})
+    
     oWorksheetSfl = oWorkbook.add_worksheet('Sourcefiles')
     oWorksheetSfl.set_tab_color('#BB77EE')
     oTitleSfl = oWorkbook.add_format({'bold': 1, 'bg_color': '#EDBADE'})
+    
+    oWorksheetSer = oWorkbook.add_worksheet('Server and timing')
+    oWorksheetSer.set_tab_color('#BBEE77')
+    oTitleSer = oWorkbook.add_format({'bold': 0, 'bg_color': '#FDEECA', 'border':1, 'border_color':'#777777'})
+    oTitleSer.set_font_name('Consolas')
+    oTitleSer.set_font_size(10)
+    
+    oWorksheetHgr = oWorkbook.add_worksheet('Hg Repos')
+    oWorksheetHgr.set_tab_color('#A1AFF2')
+    oTitleHgr = oWorkbook.add_format({'bold': 1, 'bg_color': '#997FF7'})  # @UnusedVariable
+    
+    oWorksheetHgd = oWorkbook.add_worksheet('Hg Repo Diff')
+    oWorksheetHgd.set_tab_color('#BFA1F2')
+    oTitleHgd = oWorkbook.add_format({'bold': 1, 'bg_color': '#7F99F7'})  # @UnusedVariable
+    
+    oWorksheetEnv = oWorkbook.add_worksheet('Env vars')
+    oWorksheetEnv.set_tab_color('#AFC1D2')
+    oTitleEnv = oWorkbook.add_format({'bold': 0, 'bg_color': '#DEEAFF', 'border':1, 'border_color':'#777777'})
+    oTitleEnv.set_font_name('Consolas')
+    oTitleEnv.set_font_size(10)
+    
     oFixedfont = oWorkbook.add_format({'bold': 0})
     oFixedfont.set_font_name('Consolas')
     oFixedfont.set_font_size(10)
@@ -73,7 +102,8 @@ class sc_mshqtimestamp_excel_logic(object):
     tDataLps=[]
     for i in range(len(sHeadingTms.tHeadings)):  
       tDataLps.append([])
-      
+    
+    fTime=None  
     fFirstTime=None
     iLoopProcUid=None
     tProcUid=OrderedDict()
@@ -81,10 +111,13 @@ class sc_mshqtimestamp_excel_logic(object):
     iProcUid=1
     iTotalLines=0
     tSourceDicts=OrderedDict()
-    tAdditionalInfo=OrderedDict()
     cPropath=''
     tWatches=OrderedDict()
     tWatchLabels=OrderedDict()
+    tServerInfo=[]
+    tEnvInfo=[]
+    tHgRepos=[]
+    tHgDiff=[]
     
     # Collect all data into tDataTms
     with open(cFileIP) as f:
@@ -98,7 +131,21 @@ class sc_mshqtimestamp_excel_logic(object):
                 cls.AddToSummary(oWorksheetSmy, oFixedfont, tAddEval['summary'])
               if tAddEval.has_key('OePropath'):
                 cPropath=tAddEval['OePropath']
-              tAdditionalInfo[i] = tAddEval
+              if tAddEval.has_key('ServerTime'):
+                tServerInfo.append(('ServerTime',tAddEval['ServerTime'],))
+              if tAddEval.has_key('ServerOsUname'):
+                tServerInfo.append(('ServerOsUname',tAddEval['ServerOsUname'],))
+              if tAddEval.has_key('OeHqtOverheadNs'):
+                tServerInfo.append(('OeHqtOverheadNs',int(tAddEval['OeHqtOverheadNs']),))
+              if tAddEval.has_key('EnvVar'):
+                tEnvInfo.append(tAddEval['EnvVar'].partition('=')[0:3:2])
+              if tAddEval.has_key('HgRepo'):
+                tHgRepos.append(tAddEval['HgRepo'])
+              if tAddEval.has_key('HgParents'):
+                tHgParents=tAddEval['HgParents']
+                tHgRepos.append((tHgParents[0], urllib.unquote(tHgParents[1]).decode('utf8'), tHgParents[2], urllib.unquote(tHgParents[3]).decode('utf8'),))
+              if tAddEval.has_key('HgDiff'):
+                tHgDiff.append(tAddEval['HgDiff'])
             except SyntaxError:
               sys.stderr.write(traceback.format_exc())
               sys.stderr.write('\n')
@@ -247,7 +294,8 @@ class sc_mshqtimestamp_excel_logic(object):
     
     # Summary sheet
     oWorksheetSmy.set_column(0, 0, 180)  # Column width (of summary)
-    cls.AddToSummary(oWorksheetSmy, oFixedfont, 'Delta total: {} seconds'.format(fTime))
+    if not fTime is None:
+      cls.AddToSummary(oWorksheetSmy, oFixedfont, 'Delta total: {} seconds'.format(fTime))
     
     def SetColumnTms_NanoFormat(iCol):
       oWorksheetTms.set_column(iCol,iCol,cell_format=oNanoFormat)
@@ -358,40 +406,42 @@ class sc_mshqtimestamp_excel_logic(object):
     oWorksheetSmy.insert_chart(cls.iSummaryRow + 1, 0, oChartAll)
     cls.iSummaryRow+=30
     
-    fDeltaMax=max(tDataLps[sHeadingLps.LoopDeltaX])
-    # 1-based
-    tDeltaMax=[i + 1 for i, j in enumerate(tDataLps[sHeadingLps.LoopDeltaX]) if j == fDeltaMax]
-    iLoopFirstDeltaMax=tDeltaMax[0]
+    if len(tDataLps[sHeadingLps.LoopDeltaX]) > 0:
     
-    fDeltaMin=min(tDataLps[sHeadingLps.LoopDeltaX])
-    # 1-based
-    tDeltaMin=[i + 1 for i, j in enumerate(tDataLps[sHeadingLps.LoopDeltaX]) if j == fDeltaMin]
-    iLoopFirstDeltaMin=tDeltaMin[0]
-    
-    cls.AddToSummary(oWorksheetSmy, oFixedfont, 'Slowest loop: iteration {:>10}, {:>-17.9f} seconds'.format(repr(tDeltaMax),fDeltaMax))
-    cls.AddToSummary(oWorksheetSmy, oFixedfont, 'Fastest loop: iteration {:>10}, {:>-17.9f} seconds'.format(repr(tDeltaMin),fDeltaMin))
-    cls.AddToSummary(oWorksheetSmy, oFixedfont, 'Slowest / fastest ratio:      (1 to {:>-17.9f})'.format(fDeltaMax / fDeltaMin))
+      fDeltaMax=max(tDataLps[sHeadingLps.LoopDeltaX])
+      # 1-based
+      tDeltaMax=[i + 1 for i, j in enumerate(tDataLps[sHeadingLps.LoopDeltaX]) if j == fDeltaMax]
+      iLoopFirstDeltaMax=tDeltaMax[0]
+      
+      fDeltaMin=min(tDataLps[sHeadingLps.LoopDeltaX])
+      # 1-based
+      tDeltaMin=[i + 1 for i, j in enumerate(tDataLps[sHeadingLps.LoopDeltaX]) if j == fDeltaMin]
+      iLoopFirstDeltaMin=tDeltaMin[0]
+      
+      cls.AddToSummary(oWorksheetSmy, oFixedfont, 'Slowest loop: iteration {:>10}, {:>-17.9f} seconds'.format(repr(tDeltaMax),fDeltaMax))
+      cls.AddToSummary(oWorksheetSmy, oFixedfont, 'Fastest loop: iteration {:>10}, {:>-17.9f} seconds'.format(repr(tDeltaMin),fDeltaMin))
+      cls.AddToSummary(oWorksheetSmy, oFixedfont, 'Slowest / fastest ratio:      (1 to {:>-17.9f})'.format(fDeltaMax / fDeltaMin))
 
-    # Chart: slowest
-
-    oChartSlowest = oWorkbook.add_chart({'type': 'bar'})
-    # [sheetname, first_row, first_col, last_row, last_col]
-    oChartSlowest.add_series(
-      {
-        'name'       :  'slowest',
-        'categories' :  ['Timestamps', tLoop[iLoopFirstDeltaMax - 1][0] + ROWONE, sHeadingTms.Proc, tLoop[iLoopFirstDeltaMax - 1][1] + ROWONE, sHeadingTms.Proc],
-        'values'     :  ['Timestamps', tLoop[iLoopFirstDeltaMax - 1][0] + ROWONE, sHeadingTms.Time, tLoop[iLoopFirstDeltaMax - 1][1] + ROWONE, sHeadingTms.Time],
-        'line'       :  {'color': 'silver'  },
-        'fill'       :  {'color': '#DD4433' },
-        'gap'        :  0,
-      }
-    )
-
-    oChartSlowest.set_legend({'none': True})    
-    oChartSlowest.set_size({'width': 1265, 'height': 300})
-    oChartSlowest.set_y_axis({'reverse': True})
-    oChartSlowest.set_title({'none': True})
-    oChartSlowest.set_x_axis({'num_format': '@'}) # Overrule the format of the referred cell; just use text format because the extra precision is clutter in the X axis
+      # Chart: slowest
+  
+      oChartSlowest = oWorkbook.add_chart({'type': 'bar'})
+      # [sheetname, first_row, first_col, last_row, last_col]
+      oChartSlowest.add_series(
+        {
+          'name'       :  'slowest',
+          'categories' :  ['Timestamps', tLoop[iLoopFirstDeltaMax - 1][0] + ROWONE, sHeadingTms.Proc, tLoop[iLoopFirstDeltaMax - 1][1] + ROWONE, sHeadingTms.Proc],
+          'values'     :  ['Timestamps', tLoop[iLoopFirstDeltaMax - 1][0] + ROWONE, sHeadingTms.Time, tLoop[iLoopFirstDeltaMax - 1][1] + ROWONE, sHeadingTms.Time],
+          'line'       :  {'color': 'silver'  },
+          'fill'       :  {'color': '#DD4433' },
+          'gap'        :  0,
+        }
+      )
+  
+      oChartSlowest.set_legend({'none': True})    
+      oChartSlowest.set_size({'width': 1265, 'height': 300})
+      oChartSlowest.set_y_axis({'reverse': True})
+      oChartSlowest.set_title({'none': True})
+      oChartSlowest.set_x_axis({'num_format': '@'}) # Overrule the format of the referred cell; just use text format because the extra precision is clutter in the X axis
 
     # Create graphs for the watches, next to the 'slowest' chart
     for i,cWatch in enumerate(tWatches.keys()):
@@ -413,102 +463,105 @@ class sc_mshqtimestamp_excel_logic(object):
       oChartWatSlowest.set_x_axis({'num_format': '@'}) # Overrule the format of the referred cell; just use text format because the extra precision is clutter in the X axis    
       oWorksheetSmy.insert_chart(cls.iSummaryRow + 2, i+1, oChartWatSlowest)
     
-    cls.AddToSummary(oWorksheetSmy, oFixedfont, 'Chart: Slowest loop ({}), zoomed in, line {} to {}'.format(
-      iLoopFirstDeltaMax,
-      tDataTms[sHeadingTms.Line][tLoop[iLoopFirstDeltaMax - 1][0]], 
-      tDataTms[sHeadingTms.Line][tLoop[iLoopFirstDeltaMax - 1][1]]))
+    if len(tDataLps[sHeadingLps.LoopDeltaX]) > 0:
     
-    # Insert the chart into the worksheet.
-    oWorksheetSmy.insert_chart(cls.iSummaryRow + 1, 0, oChartSlowest)
-    cls.iSummaryRow+=15
+      cls.AddToSummary(oWorksheetSmy, oFixedfont, 'Chart: Slowest loop ({}), zoomed in, line {} to {}'.format(
+        iLoopFirstDeltaMax,
+        tDataTms[sHeadingTms.Line][tLoop[iLoopFirstDeltaMax - 1][0]], 
+        tDataTms[sHeadingTms.Line][tLoop[iLoopFirstDeltaMax - 1][1]]))
+    
+      # Insert the chart into the worksheet.
+      oWorksheetSmy.insert_chart(cls.iSummaryRow + 1, 0, oChartSlowest)
+      cls.iSummaryRow+=15
     
     # Chart: fastest
 
-    oChartFastest = oWorkbook.add_chart({'type': 'bar'})
-    # [sheetname, first_row, first_col, last_row, last_col]
-    oChartFastest.add_series(
-      {
-        'name'       :  'fastest',
-        'categories' :  ['Timestamps', tLoop[iLoopFirstDeltaMin - 1][0] + ROWONE, sHeadingTms.Proc, tLoop[iLoopFirstDeltaMin - 1][1] + ROWONE, sHeadingTms.Proc],
-        'values'     :  ['Timestamps', tLoop[iLoopFirstDeltaMin - 1][0] + ROWONE, sHeadingTms.Time, tLoop[iLoopFirstDeltaMin - 1][1] + ROWONE, sHeadingTms.Time],
-        'line'       :  {'color': 'silver'},
-        'fill'       :  {'color': 'green'},
-        'gap'        :  0,
-      }
-    )
-    
-    oChartFastest.set_legend({'none': True})    
-    oChartFastest.set_size({'width': 1265, 'height': 300})
-    oChartFastest.set_y_axis({'reverse': True})
-    oChartFastest.set_title({'none': True})
-    oChartFastest.set_x_axis({'num_format': '@'}) # Overrule the format of the referred cell; just use text format because the extra precision is clutter in the X axis    
-    
-    # Create graphs for the watches, next to the 'fastest' chart
-    for i,cWatch in enumerate(tWatches.keys()):
-      oChartWatFastest = oWorkbook.add_chart({'type': 'bar'})
-      oChartWatFastest.add_series(
+    if len(tDataLps[sHeadingLps.LoopDeltaX]) > 0:
+      oChartFastest = oWorkbook.add_chart({'type': 'bar'})
+      # [sheetname, first_row, first_col, last_row, last_col]
+      oChartFastest.add_series(
         {
-          'name'       :  cWatch,
+          'name'       :  'fastest',
           'categories' :  ['Timestamps', tLoop[iLoopFirstDeltaMin - 1][0] + ROWONE, sHeadingTms.Proc, tLoop[iLoopFirstDeltaMin - 1][1] + ROWONE, sHeadingTms.Proc],
-          'values'     :  ['Watches', tLoop[iLoopFirstDeltaMin - 1][0] + ROWONE, i+2, tLoop[iLoopFirstDeltaMin - 1][1] + ROWONE, i+2],
-          'line'       :  {'color': aWatchColor(i) },
-          'fill'       :  {'color': aWatchColor(i) },
+          'values'     :  ['Timestamps', tLoop[iLoopFirstDeltaMin - 1][0] + ROWONE, sHeadingTms.Time, tLoop[iLoopFirstDeltaMin - 1][1] + ROWONE, sHeadingTms.Time],
+          'line'       :  {'color': 'silver'},
+          'fill'       :  {'color': 'green'},
           'gap'        :  0,
         }
       )
-      oChartWatFastest.set_legend({'none': True})
-      oChartWatFastest.set_size({'width': 1265, 'height': 300})
-      oChartWatFastest.set_y_axis({'reverse': True})
-      oChartWatFastest.set_title({'none': True})
-      oChartWatFastest.set_x_axis({'num_format': '@'}) # Overrule the format of the referred cell; just use text format because the extra precision is clutter in the X axis    
-      oWorksheetSmy.insert_chart(cls.iSummaryRow + 2, i+1, oChartWatFastest)
-    
-    cls.AddToSummary(oWorksheetSmy, oFixedfont, 'Chart: Fastest loop ({}), zoomed in, line {} to {}'.format(
-      iLoopFirstDeltaMin,
-      tDataTms[sHeadingTms.Line][tLoop[iLoopFirstDeltaMin - 1][0]], 
-      tDataTms[sHeadingTms.Line][tLoop[iLoopFirstDeltaMin - 1][1]]))
-    
-    # Insert the chart into the worksheet.
-    oWorksheetSmy.insert_chart(cls.iSummaryRow + 1, 0, oChartFastest)
-    cls.iSummaryRow+=15
-    
-    # Chart: slowest and fastest
-
-    oChartSlowAndFastest = oWorkbook.add_chart({'type': 'bar'})
-    # [sheetname, first_row, first_col, last_row, last_col]
-    oChartSlowAndFastest.add_series(
-      {
-        'name'       :  'slowest',
-        'categories' :  ['Timestamps', tLoop[iLoopFirstDeltaMax - 1][0] + ROWONE, sHeadingTms.Proc, tLoop[iLoopFirstDeltaMax - 1][1] + ROWONE, sHeadingTms.Proc, ],
-        'values'     :  ['Timestamps', tLoop[iLoopFirstDeltaMax - 1][0] + ROWONE, sHeadingTms.LoopDeltaAB[(iLoopFirstDeltaMax - 1) % 2], tLoop[iLoopFirstDeltaMax - 1][1] + ROWONE, sHeadingTms.LoopDeltaAB[(iLoopFirstDeltaMax - 1) % 2], ],
-        'line'       :  {'color': 'silver'},
-        'fill'       :  {'color': '#DD4433'},
-      }
-    )
-    
-    oChartSlowAndFastest.add_series(
-      {
-        'name'      :  'fastest',
-        'categories':  ['Timestamps', tLoop[iLoopFirstDeltaMin - 1][0] + ROWONE, sHeadingTms.Proc, tLoop[iLoopFirstDeltaMin - 1][1] + ROWONE, sHeadingTms.Proc, ],
-        'values'    :  ['Timestamps', tLoop[iLoopFirstDeltaMin - 1][0] + ROWONE, sHeadingTms.LoopDeltaAB[(iLoopFirstDeltaMin - 1) % 2], tLoop[iLoopFirstDeltaMin - 1][1] + ROWONE, sHeadingTms.LoopDeltaAB[(iLoopFirstDeltaMin - 1) % 2], ],
-        'line'      :  {'color': 'silver'},
-        'fill'      :  {'color': 'green'},
-        'gap'       :  0,
-      }
-    )
-    
-    oChartSlowAndFastest.set_legend({'none': True})
-    oChartSlowAndFastest.set_size({'width': 1265, 'height': 300})
-    oChartSlowAndFastest.set_y_axis({'reverse': True})
-    oChartSlowAndFastest.set_title({'none': True})
-    oChartSlowAndFastest.set_x_axis({'num_format': '@'}) # Overrule the format of the referred cell; just use text format because the extra precision is clutter in the X axis    
-    
-    cls.AddToSummary(oWorksheetSmy, oFixedfont, 'Chart: Slowest+Fastest comparison, loop {} and {}'.format(iLoopFirstDeltaMax,iLoopFirstDeltaMin))
-    
-    # Insert the chart into the worksheet.
-    oWorksheetSmy.insert_chart(cls.iSummaryRow + 1, 0, oChartSlowAndFastest)
-    cls.iSummaryRow+=15
-    
+      
+      oChartFastest.set_legend({'none': True})    
+      oChartFastest.set_size({'width': 1265, 'height': 300})
+      oChartFastest.set_y_axis({'reverse': True})
+      oChartFastest.set_title({'none': True})
+      oChartFastest.set_x_axis({'num_format': '@'}) # Overrule the format of the referred cell; just use text format because the extra precision is clutter in the X axis    
+      
+      # Create graphs for the watches, next to the 'fastest' chart
+      for i,cWatch in enumerate(tWatches.keys()):
+        oChartWatFastest = oWorkbook.add_chart({'type': 'bar'})
+        oChartWatFastest.add_series(
+          {
+            'name'       :  cWatch,
+            'categories' :  ['Timestamps', tLoop[iLoopFirstDeltaMin - 1][0] + ROWONE, sHeadingTms.Proc, tLoop[iLoopFirstDeltaMin - 1][1] + ROWONE, sHeadingTms.Proc],
+            'values'     :  ['Watches', tLoop[iLoopFirstDeltaMin - 1][0] + ROWONE, i+2, tLoop[iLoopFirstDeltaMin - 1][1] + ROWONE, i+2],
+            'line'       :  {'color': aWatchColor(i) },
+            'fill'       :  {'color': aWatchColor(i) },
+            'gap'        :  0,
+          }
+        )
+        oChartWatFastest.set_legend({'none': True})
+        oChartWatFastest.set_size({'width': 1265, 'height': 300})
+        oChartWatFastest.set_y_axis({'reverse': True})
+        oChartWatFastest.set_title({'none': True})
+        oChartWatFastest.set_x_axis({'num_format': '@'}) # Overrule the format of the referred cell; just use text format because the extra precision is clutter in the X axis    
+        oWorksheetSmy.insert_chart(cls.iSummaryRow + 2, i+1, oChartWatFastest)
+      
+      cls.AddToSummary(oWorksheetSmy, oFixedfont, 'Chart: Fastest loop ({}), zoomed in, line {} to {}'.format(
+        iLoopFirstDeltaMin,
+        tDataTms[sHeadingTms.Line][tLoop[iLoopFirstDeltaMin - 1][0]], 
+        tDataTms[sHeadingTms.Line][tLoop[iLoopFirstDeltaMin - 1][1]]))
+      
+      # Insert the chart into the worksheet.
+      oWorksheetSmy.insert_chart(cls.iSummaryRow + 1, 0, oChartFastest)
+      cls.iSummaryRow+=15
+      
+      # Chart: slowest and fastest
+  
+      oChartSlowAndFastest = oWorkbook.add_chart({'type': 'bar'})
+      # [sheetname, first_row, first_col, last_row, last_col]
+      oChartSlowAndFastest.add_series(
+        {
+          'name'       :  'slowest',
+          'categories' :  ['Timestamps', tLoop[iLoopFirstDeltaMax - 1][0] + ROWONE, sHeadingTms.Proc, tLoop[iLoopFirstDeltaMax - 1][1] + ROWONE, sHeadingTms.Proc, ],
+          'values'     :  ['Timestamps', tLoop[iLoopFirstDeltaMax - 1][0] + ROWONE, sHeadingTms.LoopDeltaAB[(iLoopFirstDeltaMax - 1) % 2], tLoop[iLoopFirstDeltaMax - 1][1] + ROWONE, sHeadingTms.LoopDeltaAB[(iLoopFirstDeltaMax - 1) % 2], ],
+          'line'       :  {'color': 'silver'},
+          'fill'       :  {'color': '#DD4433'},
+        }
+      )
+      
+      oChartSlowAndFastest.add_series(
+        {
+          'name'      :  'fastest',
+          'categories':  ['Timestamps', tLoop[iLoopFirstDeltaMin - 1][0] + ROWONE, sHeadingTms.Proc, tLoop[iLoopFirstDeltaMin - 1][1] + ROWONE, sHeadingTms.Proc, ],
+          'values'    :  ['Timestamps', tLoop[iLoopFirstDeltaMin - 1][0] + ROWONE, sHeadingTms.LoopDeltaAB[(iLoopFirstDeltaMin - 1) % 2], tLoop[iLoopFirstDeltaMin - 1][1] + ROWONE, sHeadingTms.LoopDeltaAB[(iLoopFirstDeltaMin - 1) % 2], ],
+          'line'      :  {'color': 'silver'},
+          'fill'      :  {'color': 'green'},
+          'gap'       :  0,
+        }
+      )
+      
+      oChartSlowAndFastest.set_legend({'none': True})
+      oChartSlowAndFastest.set_size({'width': 1265, 'height': 300})
+      oChartSlowAndFastest.set_y_axis({'reverse': True})
+      oChartSlowAndFastest.set_title({'none': True})
+      oChartSlowAndFastest.set_x_axis({'num_format': '@'}) # Overrule the format of the referred cell; just use text format because the extra precision is clutter in the X axis    
+      
+      cls.AddToSummary(oWorksheetSmy, oFixedfont, 'Chart: Slowest+Fastest comparison, loop {} and {}'.format(iLoopFirstDeltaMax,iLoopFirstDeltaMin))
+      
+      # Insert the chart into the worksheet.
+      oWorksheetSmy.insert_chart(cls.iSummaryRow + 1, 0, oChartSlowAndFastest)
+      cls.iSummaryRow+=15
+      
     # Make the source file list
     tHeadersSfl=[ 'Runtime context', 'Source', 'Source-Line','Byte-Offset','Seq','ID','Comment','Uid','Timestamp-Row','Timestamp-Line' ]
     oWorksheetSfl.write_row(ROWHDR, 0, tHeadersSfl, oTitleSfl)
@@ -560,6 +613,31 @@ class sc_mshqtimestamp_excel_logic(object):
     SetColumnSfl_Width(7,13)
     SetColumnSfl_Width(8,18)
     SetColumnSfl_Width(9,18)
+    
+    # Server info sheet
+    
+    def SetColumnSer_Width(iCol, iWidthIP):
+      oWorksheetSer.set_column(iCol,iCol, iWidthIP)
+      
+    SetColumnSer_Width(0,25)
+    SetColumnSer_Width(1,40)
+    
+    if len(tServerInfo)>0:
+      for i,(cToken,cValue) in enumerate(tServerInfo):
+        oWorksheetSer.write_row(i, 0, (cToken,cValue), oTitleSer)
+        
+    # Env var sheet
+    
+    def SetColumnEnv_Width(iCol, iWidthIP):
+      oWorksheetEnv.set_column(iCol,iCol, iWidthIP)
+      
+    SetColumnEnv_Width(0,25)
+    SetColumnEnv_Width(1,280)
+    
+    if len(tEnvInfo)>0:
+      tEnvInfo.sort()
+      for i,(cToken,cValue) in enumerate(tEnvInfo):
+        oWorksheetEnv.write_row(i, 0, (cToken,cValue), oTitleEnv)
     
     # Freeze the first row.
     oWorksheetSmy.freeze_panes(1, 0)
