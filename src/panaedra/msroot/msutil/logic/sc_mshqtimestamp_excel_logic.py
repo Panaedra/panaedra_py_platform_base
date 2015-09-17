@@ -598,14 +598,14 @@ class sc_mshqtimestamp_excel_logic(object):
         ], None)
       
       if bRelPath:
-        oWorksheetSfl.write_url(i + ROWONE, 1, 
+        oWorksheetSfl.write_url(i + ROWONE, 0, 
           'eclipse:///openfile?workspace=PanaedraEclipse&editor=default&window=1' + 
           '&line=' + str(iSourceLine) + 
           '&offset=' + str(iSourceOffset) + 
           '&project=amdir_gui' +
           '&path=src/' + cRelOrFullPath,
           None,
-          cRelOrFullPath)
+          key[0])
 
     # Autofilter the source file list
     oWorksheetSfl.autofilter(0, 0, len(tSourceDicts) - 1, len(tHeadersSfl) - 1)
