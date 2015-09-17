@@ -17,6 +17,9 @@ class sc_osfile(object):
       elif cLett=='!': cLett='#'
       elif cLett=='*': cLett='_'
       elif cLett=='~': cLett='_'
+      elif cLett==',': cLett=' '
+      elif cLett==':': cLett='-'
+      elif cLett==';': cLett='-'
       elif cLett=='\'': cLett='_'
       elif cLett=='"': cLett='_'
       elif cLett=='%': cLett='_'
@@ -27,7 +30,8 @@ class sc_osfile(object):
           if cLett==cXlett: cLett='-'
       aRet(cLett)
       
-    return ''.join(tRet)
+    cRet=''.join(tRet)
+    return cRet.replace('  ', ' ').replace('__', '_')
 
 
 if __name__ == '__main__':

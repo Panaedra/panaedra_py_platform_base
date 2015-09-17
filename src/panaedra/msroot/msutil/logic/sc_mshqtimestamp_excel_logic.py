@@ -719,8 +719,8 @@ class sc_mshqtimestamp_excel_logic(object):
     oWorkbook.close()
     
     if len(cFileSuffix) > 0:
-      cFileSuffix=sc_osfile.StripInvalidChars(cFileSuffix,'\\/')
-      cFileSuffix=cFileSuffix.strip('. _')
+      cFileSuffix=sc_osfile.StripInvalidChars(cFileSuffix,'\\/.')
+      cFileSuffix=cFileSuffix.strip('. _-')
       if len(cFileSuffix) > 0:
         os.rename(
           os.path.join(cFilepath, '{}.xlsx'.format(cFilebase)),
