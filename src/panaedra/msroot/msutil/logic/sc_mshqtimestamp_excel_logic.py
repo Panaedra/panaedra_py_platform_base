@@ -7,6 +7,7 @@ import xlsxwriter
 
 from collections import OrderedDict
 from panaedra.msroot.msutil.logic.sc_path import sc_path
+from panaedra.msroot.msutil.logic.sc_osfile import sc_osfile
 
 ROWHDR=0
 ROWONE=1
@@ -128,6 +129,7 @@ class sc_mshqtimestamp_excel_logic(object):
     tEnvInfo=[]
     tHgRepos=[]
     tHgDiff=[]
+    cFileSuffix=''
     
     # Collect all data into tDataTms
     with open(cFileIP) as f:
@@ -139,6 +141,8 @@ class sc_mshqtimestamp_excel_logic(object):
               tAddEval=ast.literal_eval(cEval)
               if tAddEval.has_key('summary'):
                 cls.AddToSummary(oWorksheetSmy, oFixedfont, tAddEval['summary'])
+                if cFileSuffix=='':
+                  cFileSuffix=tAddEval['summary']
               if tAddEval.has_key('OePropath'):
                 cPropath=tAddEval['OePropath']
               if tAddEval.has_key('ServerTime'):
@@ -713,6 +717,16 @@ class sc_mshqtimestamp_excel_logic(object):
     
     # Close and save the excel workbook file
     oWorkbook.close()
+    
+    if len(cFileSuffix) > 0:
+      cFileSuffix=sc_osfile.StripInvalidChars(cFileSuffix,'\\/')
+      cFileSuffix=cFileSuffix.strip('. _')
+      if len(cFileSuffix) > 0:
+        os.rename(
+          os.path.join(cFilepath, '{}.xlsx'.format(cFilebase)),
+          os.path.join(cFilepath, '{}_{}.xlsx'.format(cFilebase,cFileSuffix)))
+    
+    return 'Excel file generated OK'
   
   @classmethod
   def AddToSummary(cls, oWorksheetIP, oFixedfontIP, cSummaryLineIP):
