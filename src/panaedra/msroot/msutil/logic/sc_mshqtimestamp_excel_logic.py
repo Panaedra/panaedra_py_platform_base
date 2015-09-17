@@ -59,9 +59,12 @@ class sc_mshqtimestamp_excel_logic(object):
     
     oWorksheetEnv = oWorkbook.add_worksheet('Env vars')
     oWorksheetEnv.set_tab_color('#AFC1D2')
-    oTitleEnv = oWorkbook.add_format({'bold': 0, 'bg_color': '#DEEAFF', 'border':1, 'border_color':'#777777'})
-    oTitleEnv.set_font_name('Consolas')
-    oTitleEnv.set_font_size(10)
+    oTitleEnvTop = oWorkbook.add_format({'bold': 0, 'bg_color': '#F6FAFF', 'border':1, 'border_color':'#777777'})
+    oTitleEnvTop.set_font_name('Consolas')
+    oTitleEnvTop.set_font_size(10)
+    oTitleEnvEnd = oWorkbook.add_format({'bold': 0, 'bg_color': '#DEEAFF', 'border':1, 'border_color':'#777777'})
+    oTitleEnvEnd.set_font_name('Consolas')
+    oTitleEnvEnd.set_font_size(10)
     
     oFixedfont = oWorkbook.add_format({'bold': 0})
     oFixedfont.set_font_name('Consolas')
@@ -635,9 +638,21 @@ class sc_mshqtimestamp_excel_logic(object):
     SetColumnEnv_Width(1,280)
     
     if len(tEnvInfo)>0:
-      tEnvInfo.sort()
-      for i,(cToken,cValue) in enumerate(tEnvInfo):
-        oWorksheetEnv.write_row(i, 0, (cToken,cValue), oTitleEnv)
+      tEnvInfoTop=[]
+      tEnvInfoLow=[]
+      for cToken,cValue in tEnvInfo:
+        if cToken in ('CpSuffix','DevToken','USER'):
+          tEnvInfoTop.append((cToken,cValue))
+        else:
+          tEnvInfoLow.append((cToken,cValue))
+      tEnvInfoTop.sort()
+      tEnvInfoLow.sort()
+      iTopOffset=0
+      for i,(cToken,cValue) in enumerate(tEnvInfoTop):
+        oWorksheetEnv.write_row(i, 0, (cToken,cValue), oTitleEnvTop)
+        iTopOffset=i
+      for i,(cToken,cValue) in enumerate(tEnvInfoLow):
+        oWorksheetEnv.write_row(i + iTopOffset, 0, (cToken,cValue), oTitleEnvEnd)
     
     # Freeze the first row.
     oWorksheetSmy.freeze_panes(1, 0)
