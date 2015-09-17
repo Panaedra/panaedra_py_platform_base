@@ -56,7 +56,13 @@ class sc_mshqtimestamp_excel_logic(object):
     
     oWorksheetHgd = oWorkbook.add_worksheet('Hg Repo Diff')
     oWorksheetHgd.set_tab_color('#BFA1F2')
-    oTitleHgd = oWorkbook.add_format({'bold': 1, 'bg_color': '#7F99F7'})  # @UnusedVariable
+    oBodyHgdStart   = oWorkbook.add_format({'bold': 1, 'font_color': '#CCFFFF', 'bg_color': '#565A5F', 'border':1, 'border_color':'#F0F0FE', 'font_name':'Consolas', 'font_size':10})
+    oBodyHgdAdd     = oWorkbook.add_format({'bold': 0, 'font_color': '#00BB00', 'bg_color': '#F6FAFF', 'border':1, 'border_color':'#F0F0FE', 'font_name':'Consolas', 'font_size':10})
+    oBodyHgdAddT    = oWorkbook.add_format({'bold': 1, 'font_color': '#00BB00', 'bg_color': '#F6FAFF', 'border':1, 'border_color':'#F0F0FE', 'font_name':'Consolas', 'font_size':10})
+    oBodyHgdRem     = oWorkbook.add_format({'bold': 0, 'font_color': '#BB0000', 'bg_color': '#F6FAFF', 'border':1, 'border_color':'#F0F0FE', 'font_name':'Consolas', 'font_size':10})
+    oBodyHgdRemT    = oWorkbook.add_format({'bold': 1, 'font_color': '#BB0000', 'bg_color': '#F6FAFF', 'border':1, 'border_color':'#F0F0FE', 'font_name':'Consolas', 'font_size':10})
+    oBodyHgdContext = oWorkbook.add_format({'bold': 0, 'font_color': '#000000', 'bg_color': '#F6FAFF', 'border':1, 'border_color':'#F0F0FE', 'font_name':'Consolas', 'font_size':10})
+    oBodyHgdSteer   = oWorkbook.add_format({'bold': 0, 'font_color': '#0000BB', 'bg_color': '#F6FAFF', 'border':1, 'border_color':'#F0F0FE', 'font_name':'Consolas', 'font_size':10})
     
     oWorksheetEnv = oWorkbook.add_worksheet('Env vars')
     oWorksheetEnv.set_tab_color('#AFC1D2')
@@ -671,6 +677,31 @@ class sc_mshqtimestamp_excel_logic(object):
           oWorksheetHgr.write_row(i, 0, tRepoItem, oTitleHgrRev)
         else:
           oWorksheetHgr.write_row(i, 0, (tRepoItem,), oTitleHgrName)
+    
+    # Hg diff sheet
+    
+    
+    def SetColumnHgd_Width(iCol, iWidthIP):
+      oWorksheetHgd.set_column(iCol,iCol, iWidthIP)
+      
+    SetColumnHgd_Width(0,300)
+    
+    if len(tHgDiff)>0:
+      for i,cDiffLine in enumerate(tHgDiff):
+        if cDiffLine.startswith('diff --git a'):
+          oWorksheetHgd.write_row(i, 0, (cDiffLine,), oBodyHgdStart)
+        elif cDiffLine.startswith('--- '):
+          oWorksheetHgd.write_row(i, 0, (cDiffLine,), oBodyHgdRemT)
+        elif cDiffLine.startswith('+++ '):
+          oWorksheetHgd.write_row(i, 0, (cDiffLine,), oBodyHgdAddT)
+        elif cDiffLine.startswith('@@ '):
+          oWorksheetHgd.write_row(i, 0, (cDiffLine,), oBodyHgdSteer)
+        elif cDiffLine.startswith('-'):
+          oWorksheetHgd.write_row(i, 0, (cDiffLine,), oBodyHgdRem)
+        elif cDiffLine.startswith('+'):
+          oWorksheetHgd.write_row(i, 0, (cDiffLine,), oBodyHgdAdd)
+        else:  
+          oWorksheetHgd.write_row(i, 0, (cDiffLine,), oBodyHgdContext)
     
     # Freeze the first row.
     oWorksheetSmy.freeze_panes(1, 0)
