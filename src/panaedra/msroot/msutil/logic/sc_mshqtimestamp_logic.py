@@ -3,6 +3,7 @@ import ast
 import json
 
 from collections import OrderedDict
+from panaedra.msroot.msutil.logic.sc_mshqtimestamp_excel_logic import sc_mshqtimestamp_excel_logic
 
 class sc_mshqtimestamp_logic(object):
   
@@ -33,6 +34,11 @@ class sc_mshqtimestamp_logic(object):
         tParam['cHqtFile'], 
         tParam['dedupe'], 
         True if not tParam.has_key('replace-file') else tParam['replace-file'])
+    
+    elif tParam['mode'] == 'HqtExcelGenerate':
+      cls.cself.tRet=OrderedDict()
+      cls.cself.HqtExcelGenerate(
+        tParam['cHqtFile'])
     
     tRet=cls.cself.tRet
     cls.cself.tRet=None
@@ -95,7 +101,12 @@ class sc_mshqtimestamp_logic(object):
           tSourceCommentsIOP[cSourcecodeFileIP][i+1] = [cSourceLineComment.strip(), iBytePosPrev, ]
         iBytePosPrev=f_sourcecode.tell()
     return tSourceCommentsIOP
-
+  
+  def HqtExcelGenerate(self, cHqtFileIP):
+    cRet = sc_mshqtimestamp_excel_logic.TimestampFileToExcel(cHqtFileIP)
+    if cRet == 'Excel file generated OK':
+      os.remove(cHqtFileIP)
+    
 if __name__ == '__main__':
   '''
   cls=sc_mshqtimestamp_logic
