@@ -51,7 +51,8 @@ class sc_mshqtimestamp_excel_logic(object):
     
     oWorksheetHgr = oWorkbook.add_worksheet('Hg Repos')
     oWorksheetHgr.set_tab_color('#A1AFF2')
-    oTitleHgr = oWorkbook.add_format({'bold': 1, 'bg_color': '#997FF7'})  # @UnusedVariable
+    oTitleHgrName = oWorkbook.add_format({'bold': 1, 'bg_color': '#E9EFFF', 'border':1, 'border_color':'#777777', 'font_name':'Consolas', 'font_size':10})
+    oTitleHgrRev = oWorkbook.add_format({'bold': 0, 'bg_color': '#F6FAFF', 'border':1, 'border_color':'#777777', 'font_name':'Consolas', 'font_size':10})
     
     oWorksheetHgd = oWorkbook.add_worksheet('Hg Repo Diff')
     oWorksheetHgd.set_tab_color('#BFA1F2')
@@ -653,6 +654,23 @@ class sc_mshqtimestamp_excel_logic(object):
         iTopOffset=i
       for i,(cToken,cValue) in enumerate(tEnvInfoLow):
         oWorksheetEnv.write_row(i + iTopOffset, 0, (cToken,cValue), oTitleEnvEnd)
+        
+    # Hg repo sheet
+    
+    def SetColumnHgr_Width(iCol, iWidthIP):
+      oWorksheetHgr.set_column(iCol,iCol, iWidthIP)
+      
+    SetColumnHgr_Width(0,45)
+    SetColumnHgr_Width(1,16)
+    SetColumnHgr_Width(2,26)
+    SetColumnHgr_Width(3,150)
+    
+    if len(tHgRepos)>0:
+      for i,tRepoItem in enumerate(tHgRepos):
+        if hasattr(tRepoItem,'__iter__'):
+          oWorksheetHgr.write_row(i, 0, tRepoItem, oTitleHgrRev)
+        else:
+          oWorksheetHgr.write_row(i, 0, (tRepoItem,), oTitleHgrName)
     
     # Freeze the first row.
     oWorksheetSmy.freeze_panes(1, 0)
