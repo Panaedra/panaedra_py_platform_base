@@ -735,7 +735,7 @@ class sc_mshqtimestamp_excel_logic(object):
     cls.iSummaryRow+=1
   
 if __name__ == '__main__':
-  sc_mshqtimestamp_excel_logic.TimestampFileToExcel(r'T:\ota\systeemtst\dataexchange\fluxdumpbig__dwan_idetest.txt')
+  sc_mshqtimestamp_excel_logic.TimestampFileToExcel(r'T:\ota\systeemtst\dataexchange\fluxdumpbig__dwan_idetest_20150918T093444049c.txt')
   print 'Done'
 
 #EOF
