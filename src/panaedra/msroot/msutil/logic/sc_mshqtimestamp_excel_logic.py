@@ -19,6 +19,8 @@ class sc_mshqtimestamp_excel_logic(object):
   @classmethod
   def TimestampFileToExcel(cls, cFileIP):
     
+    cls.iSummaryRow=0
+    
     cFilepath,cFilename = os.path.split(cFileIP)
     cFilebase,dummy=os.path.splitext(cFilename)
     
