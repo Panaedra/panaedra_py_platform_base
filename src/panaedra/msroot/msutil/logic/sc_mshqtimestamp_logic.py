@@ -59,7 +59,7 @@ class sc_mshqtimestamp_logic(object):
         tLine=cLine.partition(':')
         tLineData=tLine[2].lstrip().split('\x03')
         cSourceLineComment=''
-        if (len(tLineData) < 3 or len(tLineData[3]) == 0 # No line number; just copy line as-is
+        if (len(tLineData) < 4 or len(tLineData[3]) == 0 # No line number; just copy line as-is
             or len(tLineData[-1].rstrip()) > 0): # There is already data (a literal dict) present in this line; just copy line as-is
           f_out.write('{}{}\n'.format(cLine.rstrip(),cSourceLineComment))
         else:
