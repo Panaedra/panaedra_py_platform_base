@@ -48,3 +48,6 @@ class c_socketclient(object):
       if len(cPacket) < SOCKET_RECEIVE_BLOCKSIZE:
         break
     return cData    
+  
+#EOF
+  
