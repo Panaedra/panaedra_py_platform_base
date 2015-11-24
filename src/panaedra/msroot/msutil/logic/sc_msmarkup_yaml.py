@@ -4,6 +4,8 @@ from collections import OrderedDict
 
 class sc_msmarkup_yaml(object):
   
+  '''Courtesy of: http://stackoverflow.com/a/21912744/2759336'''
+  
   @classmethod
   def ordered_load(cls, stream, Loader=yaml.Loader, object_pairs_hook=OrderedDict):
     '''Like YAML load, but load into an OrderedDict'''
