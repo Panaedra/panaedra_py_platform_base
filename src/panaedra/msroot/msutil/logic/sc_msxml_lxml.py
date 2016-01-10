@@ -2,10 +2,13 @@
 Custom helper methods for the lxml python package
 '''
 
+import os
 
 from lxml import etree
-from panaedra.mxroot.mxeclipse.logic.sc_hook_mxeclipse_debug import sc_hook_mxeclipse_debug
 from lxml.etree import Element
+
+if os.name != 'posix':
+  from panaedra.mxroot.mxeclipse.logic.sc_hook_mxeclipse_debug import sc_hook_mxeclipse_debug
 
 
 class sc_msxml_lxml(object):
@@ -59,9 +62,9 @@ class sc_msxml_lxml(object):
         oRoot = oXpath 
         break
       
-    if oRoot is None:
+    if oRoot is None and os.name != 'posix':
       sc_hook_mxeclipse_debug.MsgPopup('Error: Cannot find root with "%s"' % cXpathRootIP)
-            
+
     cChildnodenameIP = sc_msxml_lxml.FullNamespaceByTree(oEtreeIP,cChildnodenameIP)
     
     if not oRoot is None:
