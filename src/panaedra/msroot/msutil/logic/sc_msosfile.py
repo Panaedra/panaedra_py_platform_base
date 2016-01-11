@@ -1,3 +1,4 @@
+'''Note: see also sc_osfile.py'''
 
 class sc_msosfile(object):
   
