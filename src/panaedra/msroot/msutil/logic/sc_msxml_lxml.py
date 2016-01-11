@@ -112,7 +112,7 @@ class sc_msxml_lxml(object):
   def WriteXmlToFile(cls, oTreeIP, cOutputFilepathIP, cDocTypeIP=''): 
 
     cFormattedXml = cls.GetFormattedXml(oTreeIP, cDocTypeIP=cDocTypeIP) 
-    oFile = open(cOutputFilepathIP, 'w')
+    oFile = open(cOutputFilepathIP, 'wb')
     oFile.write(cFormattedXml)
     oFile.close()
   
