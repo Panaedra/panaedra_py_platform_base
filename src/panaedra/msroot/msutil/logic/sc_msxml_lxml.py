@@ -136,5 +136,16 @@ class sc_msxml_lxml(object):
     
     parser = etree.XMLParser(remove_blank_text=True, strip_cdata=False)
     return etree.parse(cFilepathClasspath, parser)
+
+if __name__ == '__main__':
+  '''
+  # Test with large xml file
+  if os.name == 'posix':
+    f='/_PATH_/systeem/naarwan/archive/b__FCMPNY_-_TERM_-_TERM_UNDISCLOSED__85687-020_000312437.xml_20160118T102110.884222'
+  else:
+    f=r'P:\live\naarwan\archive\b__FCMPNY_-_TERM_-_TERM_UNDISCLOSED__85687-020_000312437.xml_20160118T102110.884222'
+  x=sc_msxml_lxml.GetParsedXmlFromFile(f)
+  print 'Done', x
+  '''
   
 #EOF
