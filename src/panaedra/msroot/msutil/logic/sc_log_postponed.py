@@ -10,7 +10,7 @@ class sc_log_postponed(object):
 
    
 if __name__ == '__main__':
-  ''' 
+  """ 
   oLog = sc_log_postponed.GetLoggerPostponed()
   oLog.WriteStatusLn('TSTSTSTSTSTST SSSSSTTT')
   oLog.WriteEmptyLn()
@@ -34,5 +34,5 @@ if __name__ == '__main__':
  
   print oLog.ToString()
 
-  '''
+  """
 # EOF   
