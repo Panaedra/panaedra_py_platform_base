@@ -3,7 +3,7 @@ class sc_path(object):
   cSharedIniDir    = ''
   cIniDir          = ''
   cLogDir          = ''
-  cLogverboseDir   = ''
+  cLogVerboseDir   = ''
   cWorkDir         = ''
   cTempDir         = ''
   cDataExchangeDir = ''
@@ -17,7 +17,7 @@ class sc_path(object):
     cls.cSharedIniDir    = tData['cSharedIniDir'     ]
     cls.cIniDir          = tData['cIniDir'           ]
     cls.cLogDir          = tData['cLogDir'           ]
-    cls.cLogverboseDir   = tData['cLogverboseDir'    ]
+    cls.cLogVerboseDir   = tData['cLogVerboseDir'    ]
     cls.cWorkDir         = tData['cWorkDir'          ]
     cls.cTempDir         = tData['cTempDir'          ]
     cls.cDataExchangeDir = tData['cDataExchangeDir'  ]

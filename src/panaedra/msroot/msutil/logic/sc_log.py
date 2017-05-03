@@ -88,7 +88,7 @@ class c_mslog(object):
   def cSnapshotLogFileName(self):
     
     cRet = '{0[dir]}/{0[subdir]}{0[logname]}_{0[env]}_{0[stamp]}_{0[sfx]}snapshot.log'.format(
-      {'dir'         : sc_path.cLogverboseDir,
+      {'dir'         : sc_path.cLogVerboseDir,
        'subdir'      : '' if (self.cSublogdir is None or len(self.cSublogdir) == 0) else self.cSublogdir + '/',
        'logname'     : self.cLogname,
        'env'         : sc_environment.cEnv.lower(),

@@ -91,7 +91,7 @@ class sc_environment:
       cls.cWorkPath          = tData['cWorkPath'         ]
       cls.cDevIP             = tData['cDevIP'            ]
       cls.cDevToken          = tData['cDevToken'         ]
-      cls.cLogverboseDir     = tData['cLogverboseDir'    ]
+      cls.cLogVerboseDir     = tData['cLogVerboseDir'    ]
       sc_path._InheritAblEnvironmentSettings(tData)
       cRet = 'Set environment to: %s, workpath to: %s, devtoken to: %s' % (repr(cls.cEnv),repr(cls.cWorkPath),repr(cls.cDevToken)) 
     except:
