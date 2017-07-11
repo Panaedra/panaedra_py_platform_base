@@ -62,7 +62,5 @@ class sc_xmlschema(object):
     except (etree.XMLSchemaError, etree.XMLSyntaxError, IOError) as e:
       print type(e).__name__, e.message
       return False
-    finally:
-      xmlparser.error_log.last_error = None 
 
 #EOF
