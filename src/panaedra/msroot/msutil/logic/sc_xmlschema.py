@@ -7,9 +7,9 @@ Standalone python test:
 # On any AIX server:
 . $SCRIPTS/PythonpathSet testT # codeQok#7305
 # Use no files (should give error):
-clear && python -c "import os; from panaedra.msroot.msutil.logic.sc_xmlschema import sc_xmlschema; sc_xmlschema.ValidateXmlByXsd('''{'cXmlFile':'','cXmlSchema':''}''')"
+clear && python -c "import os; from panaedra.msroot.msutil.logic.sc_xmlschema import sc_xmlschema; sc_xmlschema.ValidateXmlByXsd('''{'cXmlFile':'','cXsdFile':''}''')"
 # Use example files (should validate the xml, works on all of our AIX servers):
-clear && python -c "import os; from panaedra.msroot.msutil.logic.sc_xmlschema import sc_xmlschema; sc_xmlschema.ValidateXmlByXsd('''{'cXmlFile':'%s','cXmlSchema':'%s'}'''%(os.environ['_PATH_']+'/systeemtst/vanwan_misc/_PPL_UNDISCLOSED__xsdvalidatietest_b_TERM__TERM_UNDISCLOSED___TERM_UNDISCLOSED___CCMPNY__CCMPNY_610361634001.xml',os.environ['_PATH_']+'/repo/wrkdev/tw/src/ini/xsd/b_TERM__TERM_UNDISCLOSED___TERM_UNDISCLOSED_.xsd',))"
+clear && python -c "import os; from panaedra.msroot.msutil.logic.sc_xmlschema import sc_xmlschema; sc_xmlschema.ValidateXmlByXsd('''{'cXmlFile':'%s','cXsdFile':'%s'}'''%(os.environ['_PATH_']+'/systeemtst/vanwan_misc/_PPL_UNDISCLOSED__xsdvalidatietest_b_TERM__TERM_UNDISCLOSED___TERM_UNDISCLOSED___CCMPNY__CCMPNY_610361634001.xml',os.environ['_PATH_']+'/repo/wrkdev/tw/src/ini/xsd/b_TERM__TERM_UNDISCLOSED___TERM_UNDISCLOSED_.xsd',))"
 """
 
 import ast
@@ -18,12 +18,12 @@ import json
 from lxml import etree
 
 class sc_xmlschema(object):
-  
+
   @classmethod
   def ValidateXmlByXsd(cls,cDataIP):
     '''Called from Bridge.
     
-    :param cDataIP: An ast literal_eval string, dictionary. Keys: cXmlSchema, cXmlFile
+    :param cDataIP: An ast literal_eval string, dictionary. Keys: cXsdFile, cXmlFile
     :type  cDataIP: str 
     
     :rtype:   str
@@ -36,14 +36,13 @@ class sc_xmlschema(object):
       tParam = ast.literal_eval(cDataIP)
     except ValueError:
       raise ValueError('Malformed input %r' % cDataIP)
-    
-    cXmlSchema=tParam['cXmlSchema']
+    cXsdFile=tParam['cXsdFile']
     cXmlFile=tParam['cXmlFile']
     
     tRet = {'cValidationError':''}
     
     try:
-      schema_root=etree.parse(cXmlSchema)
+      schema_root=etree.parse(cXsdFile)
       xmlschema = etree.XMLSchema(schema_root)
       xmlparser = etree.XMLParser(schema=xmlschema)
       if cls._validate(xmlparser, cXmlFile):
@@ -51,7 +50,7 @@ class sc_xmlschema(object):
       else:
         print "%s doesn't validate" % cXmlFile
     except (etree.XMLSchemaError, etree.XMLSyntaxError, IOError,) as e:
-      print type(e).__name__, cXmlSchema, e.message
+      print type(e).__name__, cXsdFile, e.message
     
     return json.dumps(tRet,indent=0)     
 
