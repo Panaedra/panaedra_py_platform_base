@@ -15,9 +15,18 @@ clear && python -c "import os; from panaedra.msroot.msutil.logic.sc_xmlschema im
 import ast
 import json
 
-from lxml import etree
-
 class sc_xmlschema(object):
+  
+  _bInitialized=False
+  _Etree=None
+  
+  @classmethod
+  def _Initialize(cls):
+    if not cls._bInitialized:
+      cls._bInitialized=True
+      from lxml import etree
+      cls._Etree=etree
+
 
   @classmethod
   def ValidateXmlByXsd(cls,cDataIP):
@@ -33,6 +42,12 @@ class sc_xmlschema(object):
     '''
     
     try:
+      cls._Initialize()
+    except Exception as e:
+      tRet = {'cValidationError': repr(e)}
+      return json.dumps(tRet,indent=0)
+      
+    try:
       tParam = ast.literal_eval(cDataIP)
     except ValueError:
       raise ValueError('Malformed input %r' % cDataIP)
@@ -42,14 +57,14 @@ class sc_xmlschema(object):
     tRet = {'cValidationError':''}
     
     try:
-      schema_root=etree.parse(cXsdFile)
-      xmlschema = etree.XMLSchema(schema_root)
-      xmlparser = etree.XMLParser(schema=xmlschema)
+      schema_root=cls._Etree.parse(cXsdFile)
+      xmlschema = cls._Etree.XMLSchema(schema_root)
+      xmlparser = cls._Etree.XMLParser(schema=xmlschema)
       if cls._validate(xmlparser, cXmlFile):
         print "%s validates" % cXmlFile
       else:
         print "%s doesn't validate" % cXmlFile
-    except (etree.XMLSchemaError, etree.XMLSyntaxError, IOError,) as e:
+    except (cls._Etree.XMLSchemaError, cls._Etree.XMLSyntaxError, IOError,) as e:
       print type(e).__name__, cXsdFile, e.message
     
     return json.dumps(tRet,indent=0)     
@@ -57,9 +72,9 @@ class sc_xmlschema(object):
   @classmethod
   def _validate(cls,xmlparser, xmlfilename):
     try:
-      etree.parse(xmlfilename, parser=xmlparser)
+      cls._Etree.parse(xmlfilename, parser=xmlparser)
       return xmlparser.error_log.last_error is None
-    except (etree.XMLSchemaError, etree.XMLSyntaxError, IOError) as e:
+    except (cls._Etree.XMLSchemaError, cls._Etree.XMLSyntaxError, IOError) as e:
       print type(e).__name__, e.message
       return False
 
