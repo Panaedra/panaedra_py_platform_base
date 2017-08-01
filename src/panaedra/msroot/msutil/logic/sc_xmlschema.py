@@ -13,7 +13,9 @@ clear && python -c "import os; from panaedra.msroot.msutil.logic.sc_xmlschema im
 """
 
 import ast
+import ctypes
 import json
+import os
 
 class sc_xmlschema(object):
   
@@ -24,9 +26,28 @@ class sc_xmlschema(object):
   def _Initialize(cls):
     if not cls._bInitialized:
       cls._bInitialized=True
+      RTLD_MEMBER =  0x040000
+      from _ctypes import RTLD_LOCAL, RTLD_GLOBAL  # @UnusedImport
+      flags = RTLD_MEMBER
+      flags |= RTLD_LOCAL
+      testlib = ctypes.CDLL("libc.a(shr_64.o)", flags)
+      testlib = ctypes.CDLL("/usr/lib/libcrypt.a(shr_64.o)", flags)
+      testlib = ctypes.CDLL("/opt/freeware/lib/libiconv.a(libiconv.so.2)", flags)
+      try:
+        testlib.boe()
+      except:
+        pass
+#       raise Exception(repr(dir(testlib)))
+      testlib = ctypes.CDLL("/opt/freeware/lib/libxml2.a(libxml2.so.2)", flags)
+#       raise Exception("test 2")
+#       testlib = ctypes.CDLL("/opt/freeware/lib/libexslt.a(libexslt.so.0)", flags)
+#       raise Exception("test 3")
+#       testlib = ctypes.CDLL("/opt/freeware/lib/libxslt.a(libxslt.so.1)", flags)
+#       raise Exception("test 4")
+#       testlib = ctypes.CDLL('/opt/freeware/lib/libxslt.a(libxslt.so.1)')
+      print testlib
       from lxml import etree
       cls._Etree=etree
-
 
   @classmethod
   def ValidateXmlByXsd(cls,cDataIP):
@@ -44,7 +65,7 @@ class sc_xmlschema(object):
     try:
       cls._Initialize()
     except Exception as e:
-      tRet = {'cValidationError': repr(e)}
+      tRet = {'cValidationError': repr(('getcwd:',os.getcwd(),'exception:',e,))}
       return json.dumps(tRet,indent=0)
       
     try:
