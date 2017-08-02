@@ -33,12 +33,9 @@ class sc_xmlschema(object):
       testlib = ctypes.CDLL("libc.a(shr_64.o)", flags)
       testlib = ctypes.CDLL("/usr/lib/libcrypt.a(shr_64.o)", flags)
       testlib = ctypes.CDLL("/opt/freeware/lib/libiconv.a(libiconv.so.2)", flags)
-      try:
-        testlib.boe()
-      except:
-        pass
 #       raise Exception(repr(dir(testlib)))
       testlib = ctypes.CDLL("/opt/freeware/lib/libxml2.a(libxml2.so.2)", flags)
+      testlib = ctypes.CDLL("/opt/freeware/lib/libxslt.a(libxslt.so.1)", flags)
 #       raise Exception("test 2")
 #       testlib = ctypes.CDLL("/opt/freeware/lib/libexslt.a(libexslt.so.0)", flags)
 #       raise Exception("test 3")
