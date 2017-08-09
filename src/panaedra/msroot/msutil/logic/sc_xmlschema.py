@@ -59,19 +59,21 @@ class sc_xmlschema(object):
     cXmlFile=tParam['cXmlFile']
     
     tRet = {'cValidationError':''}
+    tError=[]
     
     try:
       schema_root=cls._Etree.parse(cXsdFile)
       xmlschema = cls._Etree.XMLSchema(schema_root)
       xmlparser = cls._Etree.XMLParser(schema=xmlschema)
       if not cls._validate(xmlparser, cXmlFile):
-        tRet['cValidationError']+='''%s doesn't validate''' % cXmlFile
+        tError.append('''%s doesn't validate''' % cXmlFile)
     except (cls._Etree.XMLSchemaError, cls._Etree.XMLSyntaxError, IOError) as e:
       cExtraInfo=''
       if hasattr(e, 'position') and (e.position is not None) and (e.position != (0,0)):
         cExtraInfo='(line, column)={}'.format(e.position)  
-      tRet['cValidationError']+='{} {} {} {}\n'.format( type(e).__name__, cXsdFile, e.message, cExtraInfo)
-    
+      tError.append('{} {} {} {}'.format( type(e).__name__, cXsdFile, e.message, cExtraInfo))
+
+    tRet['cValidationError']='\n'.join(tError)
     return json.dumps(tRet,indent=0)
 
   @classmethod
