@@ -7,9 +7,9 @@ Standalone python test:
 # On any AIX server:
 . $SCRIPTS/PythonpathSet testT # codeQok#7305
 # Use no files (should give error):
-clear && python -c "import os; from panaedra.msroot.msutil.logic.sc_xmlschema import sc_xmlschema; sc_xmlschema.ValidateXmlByXsd('''{'cXmlFile':'','cXsdFile':''}''')"
+clear && python -c "import os; from panaedra.msroot.msutil.logic.sc_xmlschema import sc_xmlschema;x=sc_xmlschema.ValidateXmlByXsd('''{'cXmlFile':'','cXsdFile':''}''');print x"
 # Use example files (should validate the xml, works on all of our AIX servers):
-clear && python -c "import os; from panaedra.msroot.msutil.logic.sc_xmlschema import sc_xmlschema; sc_xmlschema.ValidateXmlByXsd('''{'cXmlFile':'%s','cXsdFile':'%s'}'''%(os.environ['_PATH_']+'/systeemtst/vanwan_misc/_PPL_UNDISCLOSED__xsdvalidatietest_b_TERM__TERM_UNDISCLOSED___TERM_UNDISCLOSED___CCMPNY__CCMPNY_610361634001.xml',os.environ['_PATH_']+'/repo/wrkdev/tw/src/ini/xsd/b_TERM__TERM_UNDISCLOSED___TERM_UNDISCLOSED_.xsd',))"
+clear && python -c "import os; from panaedra.msroot.msutil.logic.sc_xmlschema import sc_xmlschema;x=sc_xmlschema.ValidateXmlByXsd('''{'cXmlFile':'%s','cXsdFile':'%s'}'''%(os.environ['_PATH_']+'/systeemtst/vanwan_misc/_PPL_UNDISCLOSED__xsdvalidatietest_b_TERM__TERM_UNDISCLOSED___TERM_UNDISCLOSED___CCMPNY__CCMPNY_610361634001.xml',os.environ['_PATH_']+'/repo/wrkdev/tw/src/ini/xsd/b_TERM__TERM_UNDISCLOSED___TERM_UNDISCLOSED_.xsd',));print x"
 """
 
 import ast
@@ -25,6 +25,9 @@ class sc_xmlschema(object):
   def _Initialize(cls):
     if not cls._bInitialized:
       cls._bInitialized=True
+      # Note: We put this import in an initialization method, because:
+      #       On AIX loading of lxml can be non-trivial. We had to customize builds
+      #       of libxml2 and libxslt because of LIBPATH + embedding issues.
       from lxml import etree
       cls._Etree=etree
 
@@ -46,11 +49,12 @@ class sc_xmlschema(object):
     except Exception as e:
       tRet = {'cValidationError': repr(('getcwd:',os.getcwd(),'exception:',e,))}
       return json.dumps(tRet,indent=0)
-      
+    
     try:
       tParam = ast.literal_eval(cDataIP)
     except ValueError:
       raise ValueError('Malformed input %r' % cDataIP)
+    
     cXsdFile=tParam['cXsdFile']
     cXmlFile=tParam['cXmlFile']
     
@@ -60,22 +64,19 @@ class sc_xmlschema(object):
       schema_root=cls._Etree.parse(cXsdFile)
       xmlschema = cls._Etree.XMLSchema(schema_root)
       xmlparser = cls._Etree.XMLParser(schema=xmlschema)
-      if cls._validate(xmlparser, cXmlFile):
-        print "%s validates" % cXmlFile
-      else:
-        print "%s doesn't validate" % cXmlFile
-    except (cls._Etree.XMLSchemaError, cls._Etree.XMLSyntaxError, IOError,) as e:
-      print type(e).__name__, cXsdFile, e.message
+      if not cls._validate(xmlparser, cXmlFile):
+        tRet['cValidationError']+='''%s doesn't validate''' % cXmlFile
+    except (cls._Etree.XMLSchemaError, cls._Etree.XMLSyntaxError, IOError) as e:
+      cExtraInfo=''
+      if hasattr(e, 'position') and (e.position is not None) and (e.position != (0,0)):
+        cExtraInfo='(line, column)={}'.format(e.position)  
+      tRet['cValidationError']+='{} {} {} {}\n'.format( type(e).__name__, cXsdFile, e.message, cExtraInfo)
     
-    return json.dumps(tRet,indent=0)     
+    return json.dumps(tRet,indent=0)
 
   @classmethod
   def _validate(cls,xmlparser, xmlfilename):
-    try:
-      cls._Etree.parse(xmlfilename, parser=xmlparser)
-      return xmlparser.error_log.last_error is None
-    except (cls._Etree.XMLSchemaError, cls._Etree.XMLSyntaxError, IOError) as e:
-      print type(e).__name__, e.message
-      return False
+    cls._Etree.parse(xmlfilename, parser=xmlparser)
+    return xmlparser.error_log.last_error is None
 
 #EOF
