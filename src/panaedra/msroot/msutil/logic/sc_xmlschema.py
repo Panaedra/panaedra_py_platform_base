@@ -65,11 +65,20 @@ class sc_xmlschema(object):
       schema_root=cls._Etree.parse(cXsdFile)
       xmlschema = cls._Etree.XMLSchema(schema_root)
       xmlparser = cls._Etree.XMLParser(schema=xmlschema)
-      if not cls._validate(xmlparser, cXmlFile):
+      if os.path.getsize(cXmlFile) < 10000000: # Size in bytes. Bigger than about 10MB is handled in a SAX manner.
+        aValidate=cls._validate
+      else:
+        aValidate=cls._validate_big
+      if not aValidate(xmlparser, cXmlFile, xmlschema):
         tError.append('''%s doesn't validate''' % cXmlFile)
-    except (cls._Etree.XMLSchemaError, cls._Etree.XMLSyntaxError, IOError) as e:
+    
+    except (cls._Etree.XMLSchemaError, cls._Etree.XMLSyntaxError, IOError, OSError) as e:
       cExtraInfo=''
+      if hasattr(e, 'strerror') and (e.strerror is not None):
+        # Note: For OS errors, useful feedback
+        cExtraInfo=e.strerror  
       if hasattr(e, 'position') and (e.position is not None) and (e.position != (0,0)):
+        # Note: I don't always get this info on AIX, could be needed upgrade: https://mailman-mail5.webfaction.com/pipermail/lxml/2009-May/004517.html
         cExtraInfo='(line, column)={}'.format(e.position)  
       tError.append('{} {} {} {}'.format( type(e).__name__, cXsdFile, e.message, cExtraInfo))
 
@@ -77,8 +86,33 @@ class sc_xmlschema(object):
     return json.dumps(tRet,indent=0)
 
   @classmethod
-  def _validate(cls,xmlparser, xmlfilename):
+  def _validate(cls, xmlparser, xmlfilename, xmlschema):
+    '''Simple DOM validation through etree.parse'''
     cls._Etree.parse(xmlfilename, parser=xmlparser)
+    # Safety return, in case lxml does not throw on error
     return xmlparser.error_log.last_error is None
+
+  @classmethod
+  def _validate_big(cls, xmlparser, xmlfilename, xmlschema):
+    '''Streaming SAX parsing, can be used for validating XML files of several gigabytes'''
+    parse_context = cls._Etree.iterparse(xmlfilename, events=('end',), schema=xmlschema) # parser=xmlparser
+    for _action, elem in parse_context:
+      # cleanup
+      # first empty children from current element
+        # This is not absolutely necessary if you are also deleting siblings,
+        # but it will allow you to free memory earlier.
+      elem.clear()
+      # second, delete previous siblings (records)
+      while elem.getprevious() is not None:
+        del elem.getparent()[0]
+      # make sure you have no references to Element objects outside the loop
+    # Safety return, in case lxml does not throw on error
+    return xmlparser.error_log.last_error is None
+
+'''
+if __name__ == '__main__':
+  os.environ['_PATH_']=r'Q:\ota'
+  x=sc_xmlschema.ValidateXmlByXsd("""{'cXmlFile':'%s','cXsdFile':'%s'}"""%(os.environ['_PATH_']+'/systeemtst/vanwan_misc/_PPL_UNDISCLOSED__xsdvalidatietest_b_TERM__TERM_UNDISCLOSED___TERM_UNDISCLOSED___CCMPNY__CCMPNY_610361634001.xml',os.environ['_PATH_']+'/repo/wrkdev/tw/src/ini/xsd/b_TERM__TERM_UNDISCLOSED___TERM_UNDISCLOSED_.xsd',));print x
+'''
 
 #EOF
