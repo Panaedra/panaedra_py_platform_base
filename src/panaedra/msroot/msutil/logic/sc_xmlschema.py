@@ -15,6 +15,7 @@ clear && python -c "import os; from panaedra.msroot.msutil.logic.sc_xmlschema im
 import ast
 import json
 import os
+import traceback
 
 class sc_xmlschema(object):
   
@@ -60,7 +61,6 @@ class sc_xmlschema(object):
     
     tRet = {'cValidationError':''}
     tError=[]
-    
     try:
       schema_root=cls._Etree.parse(cXsdFile)
       xmlschema = cls._Etree.XMLSchema(schema_root)
@@ -73,14 +73,7 @@ class sc_xmlschema(object):
         tError.append('''%s doesn't validate''' % cXmlFile)
     
     except (cls._Etree.XMLSchemaError, cls._Etree.XMLSyntaxError, IOError, OSError) as e:
-      cExtraInfo=''
-      if hasattr(e, 'strerror') and (e.strerror is not None):
-        # Note: For OS errors, useful feedback
-        cExtraInfo=e.strerror  
-      if hasattr(e, 'position') and (e.position is not None) and (e.position != (0,0)):
-        # Note: I don't always get this info on AIX, could be needed upgrade: https://mailman-mail5.webfaction.com/pipermail/lxml/2009-May/004517.html
-        cExtraInfo='(line, column)={}'.format(e.position)  
-      tError.append('{} {} {} {}'.format( type(e).__name__, cXsdFile, e.message, cExtraInfo))
+      tError.append(traceback.format_exc())
 
     tRet['cValidationError']='\n'.join(tError)
     return json.dumps(tRet,indent=0)
