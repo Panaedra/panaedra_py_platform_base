@@ -44,7 +44,6 @@ class sc_xmlschema(object):
     :raises:  
 
     '''
-    
     try:
       cls._Initialize()
     except Exception as e:
@@ -71,10 +70,9 @@ class sc_xmlschema(object):
         aValidate=cls._validate_big
       if not aValidate(xmlparser, cXmlFile, xmlschema):
         tError.append('''%s doesn't validate''' % cXmlFile)
-    
-    except (cls._Etree.XMLSchemaError, cls._Etree.XMLSyntaxError, IOError, OSError) as e:
+    except: 
       tError.append(traceback.format_exc())
-
+        
     tRet['cValidationError']='\n'.join(tError)
     return json.dumps(tRet,indent=0)
 
