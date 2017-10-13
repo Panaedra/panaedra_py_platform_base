@@ -64,7 +64,7 @@ class sc_msmetrics_influxdb_xu(object):
       tTagNames=cTagNames.split(',')
       cMeasurement=tParam['measurement']
       with open(cJsonFile,'rb') as f:
-        tJsonContents=json.load(f)
+        tJsonContents=json.load(f, object_pairs_hook=OrderedDict)
       cls.cself.oInfluxDbCli.set_timestamp()
       for tJsonRow in tJsonContents:
         tJsonRow=deepcopy(tJsonRow)
@@ -73,7 +73,7 @@ class sc_msmetrics_influxdb_xu(object):
           # Move field data to tag dictionary
           tTags[cTagName]=tJsonRow.pop(cTagName)
         cls.cself.oInfluxDbCli.add_point(cMeasurement, tFieldsIP=tJsonRow, tTagsIP=tTags)
-        cls.cself.oInfluxDbCli.write_points_bulk()
+      cls.cself.oInfluxDbCli.write_points_bulk()
       cls.cself.tRet['jsonfile-written']=True
 
     tRet=cls.cself.tRet

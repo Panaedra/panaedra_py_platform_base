@@ -28,7 +28,7 @@ class c_influxdbclient_bulk(InfluxDBClient):
     self.oLog = oLogIP
   
   def set_timestamp(self, dtTimestampIP=None):
-    self.oTimestamp = datetime.now() if dtTimestampIP is None else dtTimestampIP
+    self.oTimestamp = datetime.utcnow() if dtTimestampIP is None else dtTimestampIP
     
   def add_point(self, cMeasurementIP, oFieldIP=None, tFieldsIP=None, tTagsIP=None, oTimestampIP=None): 
     tPoint = { 
